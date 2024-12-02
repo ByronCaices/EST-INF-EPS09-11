@@ -53,5 +53,8 @@ if (!requireNamespace('WRS2', quietly = TRUE)){
 library(WRS2)
 ```
 
-
+```{r leer archivo}
+datos <- read.csv2("EP09 Datos.csv")
+head(datos)
+```
 
