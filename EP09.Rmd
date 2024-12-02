@@ -58,3 +58,24 @@ datos <- read.csv2("EP09 Datos.csv")
 head(datos)
 ```
 
+```{r semilla}
+set.seed(7525)
+
+datos = datos %>% filter(Gender == 1) %>% sample_n(100)
+datos[["id"]] = 1:100
+
+i_datos = sample.int(n = 100, size = 70, replace = FALSE)
+
+datos_70 = datos[i_datos,]
+datos_30 = datos[-i_datos,]
+
+predictores = sample(colnames(datos), 8)
+
+print(predictores)
+
+modeloSimple = lm(Weight ~ Waist.Girth, data = datos_70)
+print(summary(modeloSimple))
+
+
+```
+
