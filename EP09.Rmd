@@ -53,40 +53,77 @@ if (!requireNamespace('WRS2', quietly = TRUE)){
 library(WRS2)
 ```
 
+Primero leemos los datos
 ```{r leer archivo}
-datos <- read.csv2("EP09 Datos.csv")
+datosGenerales <- read.csv2("EP09 Datos.csv")
 head(datos)
 ```
-
-```{r semilla}
+Luego fijamos una semilla y como la semilla es impar obtenemos una muestra aleatoria de 100 hombres, donde usamos 70 muestras para generar el modelo de regresión simple y múltiple, ademas obtenemos ocho variables aleatoriamente para como posibles predictoras.
+```{r muestras}
 set.seed(7525)
 
-datos = datos %>% filter(Gender == 1) %>% sample_n(100)
-datos[["id"]] = 1:100
+datos = datosGenerales %>% filter(Gender == 1) %>% sample_n(100)
 
 i_datos = sample.int(n = 100, size = 70, replace = FALSE)
 
-datos_70 = datos[i_datos,]
-datos_30 = datos[-i_datos,]
+datosModelos = datos[i_datos,]
+datosPruebas = datos[-i_datos,]
 
 predictores = sample(colnames(datos), 8)
 
 print(predictores)
-
-modeloSimple = lm(Weight ~ Waist.Girth, data = datos_70)
+```
+Primero creamos el modelo simple con la variable "Waist.Girth" que corresponde al grosor de la cintura pues .....
+```{r modelo simple}
+modeloSimple = lm(Weight ~ Waist.Girth, data = datosModelos)
 print(summary(modeloSimple))
+```
+Empezamos a crear un modelo múltiple en base al modelo simple aplicando la estrategia de eliminación hacia atras, para esto creamos un dataframe solo con las variables obtenidas aleatoriamente y generamos un modelo considerando todas las variables obtenidas como predictoras, para la eliminación de predictores, eliminaremos el predictor que presente un menor valor del estadistico F.
+```{r nuevo df}
+datosModelos = datosModelos %>% select(Weight, Waist.Girth, Knee.Girth, Chest.diameter, Wrist.Minimum.Girth, Thigh.Girth, Height, Calf.Maximum.Girth)
 
-modeloMultiple1 = lm(Weight ~ Waist.Girth + Knee.Girth, data = datos_70)
-print(summary(modeloMultiple1))
+modeloCompleto = lm(Weight ~ ., data = datosModelos)
+print(summary(modeloCompleto))
+```
+Ahora comenzamos con la regresión paso a paso, donde primero generamos los resultados de los modelos al eliminar un predictor.
+```{r modelo multiple 1}
+paso = drop1(modeloCompleto, test = "F")
+print(paso, digits = 3, signif.legend = TRUE)
+```
+Observamos que el predictor Knee.Girth tiene un menor valor del estadistico F por lo que lo eliminamos del modelo y hacemos otro paso más de la regresión paso a paso
+```{r modelo multiple 2}
+modeloMultiple1 = update(modeloCompleto, . ~ . - Knee.Girth)
 
-modeloMultiple2 = lm(Weight ~ Waist.Girth + Knee.Girth + Ankles.diameter, data = datos_70)
+paso = drop1(modeloMultiple1, test = "F")
+print(paso, digits = 3, signif.legend = TRUE)
+```
+Observamos que el predictor Chest.diameter tiene un menor valor del estadistico F por lo que lo eliminamos del modelo y hacemos otro paso más de la regresión paso a paso
+```{r modelo multiple 3}
+modeloMultiple2 = update(modeloMultiple1, . ~ . - Chest.diameter)
+
+paso = drop1(modeloMultiple2, test = "F")
+print(paso, digits = 3, signif.legend = TRUE)
+```
+
+Observamos que el predictor Calf.Maximum.Girth. tiene un menor valor del estadistico F por lo que lo eliminamos del modelo y hacemos otro paso más de la regresión paso a paso, cabe resaltar que si bien tiene un menor valor del estadistico F, tambien posee un valor p muy pequeño por lo cual comparamos el modelo con y sin este predictor.
+```{r modelo multiple 4}
+modeloMultiple3 = update(modeloMultiple2, . ~ . - Calf.Maximum.Girth)
 print(summary(modeloMultiple2))
-
-modeloMultiple3 = lm(Weight ~ Waist.Girth + Knee.Girth + Ankles.diameter + Navel.Girth, data = datos_70)
 print(summary(modeloMultiple3))
 
-modeloMultiple4 = lm(Weight ~ Waist.Girth + Knee.Girth + Ankles.diameter + Bicep.Girth, data = datos_70)
-print(summary(modeloMultiple4))
 
+```
+## Bondad de ajuste de los modelos
+
+Con respecto al modelo simple podemos observar que se obtiene un r cuadrado de 0,685 por lo cual podemos afirmar que el modelo basado en el grosor de la cintura reduce en un 68,5% la varianza aleatoria respecto al modelo nulo, además de que esta reducción es significativa puesto que el valor p obtenido del modelo es mucho menor al nivel de significancia ..
+
+Con respecto al modelo múltiple
+```{r comprobar modelo}
+rmse_modeloSimple = sqrt(mean(resid(modeloSimple) ** 2))
+
+prediccionesSimple = predict(modeloSimple, datos_30)
+
+errorSimple = datos_30[["Weight"]] - prediccionesSimple
+rmse_prueba = sqrt(mean(errorSimple) ** 2)
 ```
 
