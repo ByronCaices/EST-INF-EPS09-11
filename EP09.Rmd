@@ -30,6 +30,10 @@ library(tidyverse)
 if (!requireNamespace('ggpubr', quietly = TRUE)){
   install.packages('ggpubr')
 }
+library(car)
+if (!requireNamespace('car', quietly = TRUE)){
+  install.packages('car')
+}
 library(ggpubr)
 if (!requireNamespace('ez', quietly = TRUE)){
   install.packages('ez')
@@ -111,13 +115,27 @@ modeloMultiple3 = update(modeloMultiple2, . ~ . - Calf.Maximum.Girth)
 print(summary(modeloMultiple2))
 print(summary(modeloMultiple3))
 
-
+modeloMultiple = modeloMultiple2
 ```
+Observamos que el modelo con el predictor Calf.Maximum.Girth posee un mayor valor R cuadrado que el modelo sin este predictor por lo cual dejamos el modelo que contiene este predictor.
+
 ## Bondad de ajuste de los modelos
 
-Con respecto al modelo simple podemos observar que se obtiene un r cuadrado de 0,685 por lo cual podemos afirmar que el modelo basado en el grosor de la cintura reduce en un 68,5% la varianza aleatoria respecto al modelo nulo, además de que esta reducción es significativa puesto que el valor p obtenido del modelo es mucho menor al nivel de significancia ..
+Considerando un nivel de significancia  estandar de 0.05 podemos afirmar que:
 
-Con respecto al modelo múltiple
+Con respecto al modelo simple, podemos observar que se obtiene un r cuadrado de 0,685 por lo cual podemos afirmar que el modelo basado en el grosor de la cintura reduce en un 68,5% la varianza aleatoria respecto al modelo nulo, además de que esta reducción es significativa puesto que el valor p obtenido del modelo es mucho menor al nivel de significancia establecido.
+
+Y con respecto al modelo múltiple que considera como predictores las variables que representan, el grosor de la cintura, el grosor promedio de la parte más delgada de ambas muñecas, el grosor promedio de ambos muslos bajo el pliegue del glúteo, la altura y el grosor promedio de la parte más ancha de ambas pantorrillas, este obtiene un r d}cuadrado de 0,9606 por lo cual podemos afirmar que el modelo múltiple reduce en un 96,05% la varianza aleatoria respecto al modelo nulo, además de que esta reducción es significativa puesto que el valor p obtenido del modelo es mucho menor al nivel de significancia establecido.
+
+```{r generalidad}
+g1 = residualPlots(modeloSimple, type = "rstandard", id=list(method = "r", n = 3, cex = 0.7, location = "lr"),
+                   col = "steelblue", pch = 20, col.quad = c("steelblue", "red"))
+print(durbinWatsonTest(modeloSimple))
+
+mm1 = marginalModelPlots(modeloSimple, sd = TRUE, id=list(method = "r", n = 3, cex = 0.7, location = "lr"),
+                   col = "steelblue", pch = 20, col.quad = c("steelblue", "red"))
+```
+A partir del gráfico de residuos podemos observar que se cumplen todas las condiciones para aplicar el método de mínimos cuadrados, puesto que podemos observar que los valores se distribuyen aleatoriamente al rededor de la linea del valor 0, forman una banda horizontal en torno a la linea del valor 0, los residuos no forman un patrón reconocible y por lo tanto tampoco hay valores que se alejan del patr+on que forma los demás. Cabe resaltar que el valor p obtenido por la prueba de no aditividad es significativo puesto que es menor al nivel de significancia, por lo cual podriamos afirmar que existe evidencia para creer que la relación entre el grosor de la cintura y el peso no es lineal, además la prueba de Durbin-Watson reporta un valor p de 0,102, el cual es mayor al nivel de significancia por lo cual fallamos en rechazar la hipótesis nula de la prueba y concluimos que los datos no podemos descartar que las observaciones no presentan autocorrelación
 ```{r comprobar modelo}
 rmse_modeloSimple = sqrt(mean(resid(modeloSimple) ** 2))
 
