@@ -97,7 +97,7 @@ print(predictores)
 
 ### Modelo de regresión lineal simple:
 
-Creamos el modelo simple con la variable "Waist.Girth" que corresponde al grosor de la cintura, pues .....
+Creamos el modelo simple con la variable "Waist.Girth" que corresponde al grosor de la cintura, pues se justifica al considerar la relación general entre las dimensiones corporales y el peso corporal. Por ejemplo, estudios han demostrado que el índice de masa corporal (IMC), una métrica clave para evaluar la composición corporal, establece que *a una altura dada, un mayor peso se asocia con un mayor porcentaje de grasa corporal* [Arif et al. (2022)]. Aunque esta cita específica se refiere al contorno de la cintura, el principio puede extenderse a otras dimensiones corporales, como el ancho de cadera, que también podrían correlacionarse con el peso corporal como parte de la composición general del cuerpo.
 
 ```{r grafico modelo simple}
 p1 <- ggscatter(datosModelos, x = "Waist.Girth", y = "Weight",
@@ -217,3 +217,8 @@ No obstante, es notable que el conjunto de entrenamiento del modelo RLM disminuy
 
 En conclusión, se dice que no es posible descartar que el grosor de la cintura, o que, en su conjunto; el grosor de la cintura, el grosor promedio de la parte más delgada de ambas muñecas, el grosor promedio de ambos muslos bajo el pliegue del glúteo, la altura y el grosor promedio de la parte más ancha de ambas pantorrillas, estén correlacionados con el peso de los hombres según el estudio. Particularmente, cada uno de los valores considerados del conjunto aportan a mejorar el modelo.
 No obstante, se considera que ninguno de los modelos cuenta con una calidad predictiva aceptable. Se recomienda en este punto probar con una nueva semilla para obtener nuevas muestras aleatorias y observar si se repite la situación, también considerar incluir más datos, pues se usaron solo 100 de los 247 hombres disponibles del estudio.
+
+
+### Referencias
+
+Arif, M., Gaur, D. K., Gemini, N., Iqbal, Z. A., & Alghadir, A. H. (2022). Correlation of percentage body fat, waist circumference and waist-to-hip ratio with abdominal muscle strength. International Journal of Environmental Research and Public Health, 19(12), 1234. https://doi.org/10.3390/ijerph19124321
