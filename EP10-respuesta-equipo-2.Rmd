@@ -1,0 +1,93 @@
+---
+title: "EP10-respuesta-equipo-2"
+output: html_document
+date: "2024-12-11"
+---
+
+```{r setup, include=FALSE}
+options(repos = c(CRAN = "https://cran.rstudio.com/"))
+
+if (!requireNamespace('tidyverse', quietly = TRUE)){
+  install.packages('tidyverse')
+}
+library(tidyverse)
+if (!requireNamespace('ggpubr', quietly = TRUE)){
+  install.packages('ggpubr')
+}
+library(car)
+if (!requireNamespace('car', quietly = TRUE)){
+  install.packages('car')
+}
+library(ggpubr)
+if (!requireNamespace('ez', quietly = TRUE)){
+  install.packages('ez')
+}
+library(ez)
+if (!requireNamespace('RVAideMemoire', quietly = TRUE)){
+  install.packages('RVAideMemoire')
+}
+library(RVAideMemoire)
+if (!requireNamespace('rcompanion', quietly = TRUE)){
+  install.packages('rcompanion')
+}
+library(rcompanion)
+if (!requireNamespace('dplyr', quietly = TRUE)){
+  install.packages('dplyr')
+}
+library(dplyr)
+if (!requireNamespace('WRS2', quietly = TRUE)){
+  install.packages('WRS2')
+}
+library(WRS2)
+```
+
+#Ep10
+```{r datos}
+datosGenerales <- read.csv2("EP09 Datos.csv")
+head(datosGenerales)
+datosGenerales[["IMC"]] = datosGenerales[["Weight"]] / ((datosGenerales[["Height"]]/100) * (datosGenerales[["Height"]]/100))
+datosSobrepeso = datosGenerales %>% filter(IMC < 23.2)
+datosPesoNormal = datosGenerales %>% filter(IMC >= 23.2)
+datosSobrepeso[["EN"]] = 1
+datosPesoNormal[["EN"]] = 0
+```
+## 1-Definir la semilla a utilizar, que corresponde a los últimos cuatro dígitos del RUN (sin considerar el dígito verificador) del integrante de mayor edad del equipo.
+```{r seed}
+set.seed(7525)
+```
+## 2-Seleccionar una muestra de 150 mujeres (si la semilla es un número par) o 150 hombres (si la semilla es impar), asegurando que la mitad tenga estado nutricional “sobrepeso” y la otra mitad “no sobrepeso” en cada caso. Dividir esta muestra en dos conjuntos: los datos de 100 personas (50 con EN “sobrepeso”) para utilizar en la construcción de los modelos y 50 personas (25 con EN “sobrepeso”) para poder evaluarlos.
+```{r conjuntos}
+datosSobrepeso = datosSobrepeso %>% filter(Gender == 1) %>% sample_n(75)
+datosPesoNormal = datosPesoNormal %>% filter(Gender == 1) %>% sample_n(75)
+
+idatosSobre = sample.int(50)
+idatosNormal = sample.int(50)
+
+datosEntrenamiento = rbind(datosSobrepeso[idatosSobre,], datosPesoNormal[idatosNormal,])
+datosPrueba = rbind(datosSobrepeso[-idatosSobre,], datosPesoNormal[-idatosNormal,])
+
+```
+## 3- Recordar las ocho posibles variables predictoras seleccionadas de forma aleatoria en el ejercicio anterior.
+```{r predictores}
+predictores = c("Knee.Girth", "Weight", "Chest.diameter", "Wrist.Minimum.Girth", "Thigh.Girth", "Height", "Calf.Maximum.Girth", "Gender" )
+```
+## 4- Seleccionar, de las otras variables, una que el equipo considere que podría ser útil para predecir la clase EN, justificando bien esta selección (idealmente con literatura).
+```{r predictor}
+
+```
+## 5 -Usando el entorno R, construir un modelo de regresión logística con el predictor seleccionado en el paso anterior y utilizando de la muestra obtenida.
+```{r modelo simple}
+
+```
+## 6- Usando estas herramientas para la exploración de modelos del entorno R1, buscar entre dos y cinco predictores de entre las variables seleccionadas al azar, recordadas en el punto 3, para agregar al modelo obtenido en el paso 5.
+```{r modelo multiple}
+
+```
+## 7- Evaluar la confiabilidad de los modelos (i.e. que tengan un buen nivel de ajuste y son generalizables) y “arreglarlos” en caso de que tengan algún problema.
+```{r evaluacion}
+
+```
+## 8- Usando código estándar1, evaluar el poder predictivo de los modelos con los datos de las 50 personas que no se incluyeron en su construcción en términos de sensibilidad y especificidad.
+```{r pruebas}
+
+```
