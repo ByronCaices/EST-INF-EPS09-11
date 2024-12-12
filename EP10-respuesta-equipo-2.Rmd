@@ -69,13 +69,13 @@ datosPesoNormal[["EN"]] = 0
 
 #### Ahora podemos construir un modelo de regresión logística para predecir la variable EN, de acuerdo con las siguientes instrucciones:
 
-### 1. Definir la semilla a utilizar, que corresponde a los últimos cuatro dígitos del RUN (sin considerar el dígito verificador) del integrante de mayor edad del equipo.
+### 1- Definir la semilla a utilizar, que corresponde a los últimos cuatro dígitos del RUN (sin considerar el dígito verificador) del integrante de mayor edad del equipo.
 
 ```{r seed}
 set.seed(4545)  # semilla impar, tomamos muestra de 150 hombres
 ```
 
-### 2. Seleccionar una muestra de 150 mujeres (si la semilla es un número par) o 150 hombres (si la semilla es impar), asegurando que la mitad tenga estado nutricional “sobrepeso” y la otra mitad “no sobrepeso” en cada caso. Dividir esta muestra en dos conjuntos: los datos de 100 personas (50 con EN “sobrepeso”) para utilizar en la construcción de los modelos y 50 personas (25 con EN “sobrepeso”) para poder evaluarlos.
+### 2- Seleccionar una muestra de 150 mujeres (si la semilla es un número par) o 150 hombres (si la semilla es impar), asegurando que la mitad tenga estado nutricional “sobrepeso” y la otra mitad “no sobrepeso” en cada caso. Dividir esta muestra en dos conjuntos: los datos de 100 personas (50 con EN “sobrepeso”) para utilizar en la construcción de los modelos y 50 personas (25 con EN “sobrepeso”) para poder evaluarlos.
 
 ```{r conjuntos}
 datosSobrepeso = datosSobrepeso %>% filter(Gender == 1) %>% sample_n(75)
@@ -108,16 +108,22 @@ predictores = c("Knee.Girth", "Weight", "Chest.diameter", "Wrist.Minimum.Girth",
 
 Con respecto a una variable no listada que podría ser útil para predecir la clase EN, proponemos la variable "Waist.Girth" que corresponde al grosor de la cintura, y relacionamos razonablemente a la circunferencia de la cintura, sobre la que se dice lo siguiente en un artículo de la Universidad Central de Venezuela, Escuela de Nutrición y Dietética; "su comportamiento (de la Circunferencia de Cintura) es sistemático y consistente, se correlaciona con el IMC y con el Peso; la regresión logística revela su alta sensibilidad y especificidad, se recomienda la medición de la CC para evaluar sobrepeso y obesidad."
 
-### 5 -Usando el entorno R, construir un modelo de regresión logística con el predictor seleccionado en el paso anterior y utilizando de la muestra obtenida.
+### 5- Usando el entorno R, construir un modelo de regresión logística con el predictor seleccionado en el paso anterior y utilizando la muestra obtenida.
 
 ```{r modelo simple}
-
+modelo <- glm(EN ~ Waist.Girth, data = datosEntrenamiento, family = binomial(link = "logit"))
+summary(modelo)
 ```
 
-### 6- Usando estas herramientas para la exploración de modelos del entorno R1, buscar entre dos y cinco predictores de entre las variables seleccionadas al azar, recordadas en el punto 3, para agregar al modelo obtenido en el paso 5.
+### 6- Usando estas herramientas para la exploración de modelos del entorno R, buscar entre dos y cinco predictores de entre las variables seleccionadas al azar, recordadas en el punto 3, para agregar al modelo obtenido en el paso 5.
 
+Para esto usaremos regresion paso a paso escalonada
 ```{r modelo multiple}
+modeloNulo <- glm(EN ~ 1, data = datosEntrenamiento, family = binomial(link = "logit"))
+modeloMaximo <- glm(EN ~ ., data = datosEntrenamiento, family = binomial(link = "logit"))
 
+modeloAjustado <- step(modeloNulo, scope = list(lower = modeloNulo, upper = modeloMaximo), direction = "both", trace = FALSE)
+summary(modeloAjustado)
 ```
 
 ### 7- Evaluar la confiabilidad de los modelos (i.e. que tengan un buen nivel de ajuste y son generalizables) y “arreglarlos” en caso de que tengan algún problema.
@@ -126,7 +132,7 @@ Con respecto a una variable no listada que podría ser útil para predecir la cl
 
 ```
 
-### 8- Usando código estándar1, evaluar el poder predictivo de los modelos con los datos de las 50 personas que no se incluyeron en su construcción en términos de sensibilidad y especificidad.
+### 8- Usando código estándar, evaluar el poder predictivo de los modelos con los datos de las 50 personas que no se incluyeron en su construcción en términos de sensibilidad y especificidad.
 
 ```{r pruebas}
 
