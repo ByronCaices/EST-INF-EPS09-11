@@ -116,15 +116,20 @@ summary(modelo)
 ```
 
 ### 6- Usando estas herramientas para la exploración de modelos del entorno R, buscar entre dos y cinco predictores de entre las variables seleccionadas al azar, recordadas en el punto 3, para agregar al modelo obtenido en el paso 5.
-
+Primero dejamos los datos solo con los posibles predictores y el escogido en el paso anterior
+```{r datos ajustados}
+datosEntrenamiento = datosEntrenamiento %>% select(c("Knee.Girth", "Weight", "Chest.diameter", "Wrist.Minimum.Girth", "Thigh.Girth", "Height", "Calf.Maximum.Girth", "Gender", "Waist.Girth", "EN" ))
+datosPrueba = datosPrueba %>% select(c("Knee.Girth", "Weight", "Chest.diameter", "Wrist.Minimum.Girth", "Thigh.Girth", "Height", "Calf.Maximum.Girth", "Gender", "Waist.Girth", "EN" ))
+```
 Para esto usaremos regresion paso a paso escalonada
 ```{r modelo multiple}
-modeloNulo <- glm(EN ~ 1, data = datosEntrenamiento, family = binomial(link = "logit"))
+modeloNulo <- glm(EN ~ Waist.Girth, data = datosEntrenamiento, family = binomial(link = "logit"))
 modeloMaximo <- glm(EN ~ ., data = datosEntrenamiento, family = binomial(link = "logit"))
 
 modeloAjustado <- step(modeloNulo, scope = list(lower = modeloNulo, upper = modeloMaximo), direction = "both", trace = FALSE)
 summary(modeloAjustado)
 ```
+Luego de aplicar la regresión paso a paso escalonada obtenemos un modelo en base a la altura y el peso adicional a , lo cual tiene todo el sentido, puesto que el estado nutricional depende del IMC, el cual es calculado en base a la altura y el peso de la persona
 
 ### 7- Evaluar la confiabilidad de los modelos (i.e. que tengan un buen nivel de ajuste y son generalizables) y “arreglarlos” en caso de que tengan algún problema.
 
