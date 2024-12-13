@@ -129,7 +129,7 @@ modeloMaximo <- glm(EN ~ ., data = datosEntrenamiento, family = binomial(link = 
 modeloAjustado <- step(modeloNulo, scope = list(lower = modeloNulo, upper = modeloMaximo), direction = "both", trace = FALSE)
 summary(modeloAjustado)
 ```
-Luego de aplicar la regresión paso a paso escalonada obtenemos un modelo en base a la altura y el peso adicional a , lo cual tiene todo el sentido, puesto que el estado nutricional depende del IMC, el cual es calculado en base a la altura y el peso de la persona
+Luego de aplicar la regresión paso a paso escalonada obtenemos un modelo en base a la altura y el peso adicional al grosor de la cintura , lo cual tiene todo el sentido, puesto que el estado nutricional depende del IMC, el cual es calculado en base a la altura y el peso de la persona
 
 ### 7- Evaluar la confiabilidad de los modelos (i.e. que tengan un buen nivel de ajuste y son generalizables) y “arreglarlos” en caso de que tengan algún problema.
 
