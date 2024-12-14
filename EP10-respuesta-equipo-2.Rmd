@@ -101,7 +101,8 @@ Las variables aleatorias obtenidas del ejercicio anterior fueron las siguientes:
 * Gender
 
 ```{r predictores}
-predictores = c("Knee.Girth", "Weight", "Chest.diameter", "Wrist.Minimum.Girth", "Thigh.Girth", "Height", "Calf.Maximum.Girth", "Gender" )
+predictores = c("Knee.Girth", "Weight", "Chest.diameter", "Wrist.Minimum.Girth", "Thigh.Girth", "Height", "Calf.Maximum.Girth")
+# Gender no aplica
 ```
 
 ### 4- Seleccionar, de las otras variables, una que el equipo considere que podría ser útil para predecir la clase EN, justificando bien esta selección (idealmente con literatura).
@@ -117,14 +118,79 @@ summary(modelo)
 
 ### 6- Usando estas herramientas para la exploración de modelos del entorno R, buscar entre dos y cinco predictores de entre las variables seleccionadas al azar, recordadas en el punto 3, para agregar al modelo obtenido en el paso 5.
 
-Para esto usaremos regresion paso a paso escalonada
+Para esto usaremos regresion paso a paso hacia adelante
 ```{r modelo multiple}
-modeloNulo <- glm(EN ~ 1, data = datosEntrenamiento, family = binomial(link = "logit"))
-modeloMaximo <- glm(EN ~ ., data = datosEntrenamiento, family = binomial(link = "logit"))
+# Datos con solo predictores:
+datosPredictores <- datosEntrenamiento[, c("EN", predictores)]
 
-modeloAjustado <- step(modeloNulo, scope = list(lower = modeloNulo, upper = modeloMaximo), direction = "both", trace = FALSE)
-summary(modeloAjustado)
+modeloNulo <- glm(EN ~ 1, data = datosPredictores, family = binomial(link = "logit"))
+modeloMaximo <- glm(EN ~ ., data = datosPredictores, family = binomial(link = "logit"))
+
+# Revisar un paso hacia adelante
+cat("\nPaso 1:\n----------------\n")
+print(add1(modeloNulo, scope = modeloMaximo))
 ```
+
+El valor más apto de agregar parece ser "Thigh.Girth", se actualiza y se reviza el modelo
+```{r}
+modelo1 <- update(modeloNulo, . ~ . + Thigh.Girth)
+print(summary(modelo1))
+```
+Notas del modelo:
+
++ p-value de Thigh.Girth: 8.5e-07 (significativo)
+
+AIC: 79.212
+
+Se continua al siguiente paso
+```{r}
+cat("\nPaso 2:\n----------------\n")
+print(add1(modelo1, scope = modeloMaximo))
+```
+
+El siguiente valor más apto de agregar es "Wrist.Minimum.Girth",  se actualiza y se reviza el modelo
+```{r}
+modelo2 <- update(modelo1, . ~ . + Wrist.Minimum.Girth)
+print(summary(modelo2))
+```
+Notas del modelo:
+
++ p-value de Thigh.Girth: 4.15e-06 (significativo)
++ p-value de Wrist.Minimum.Girth: 0.0194 (significativo)
+
+AIC: 75.176 (una disminución de 4.036 respecto al modelo sin Wrist.Minimum.Girth)
+
+Se continua al siguiente paso
+```{r}
+cat("\nPaso 3:\n----------------\n")
+print(add1(modelo2, scope = modeloMaximo))
+```
+
+El siguiente valor más apto de agregar es "Height",  se actualiza y se reviza el modelo
+```{r}
+modelo3 <- update(modelo2, . ~ . + Height)
+print(summary(modelo3))
+```
+Notas del modelo:
+
++ p-value de Thigh.Girth: 3.22e-06 (significativo)
++ p-value de Wrist.Minimum.Girth: 0.003696 (significativo)
++ p-value de Height: 0.007628 (significativo)
+
+AIC: 67.606 (una disminución de 7.57 respecto al modelo sin Height)
+
+Se continua al siguiente paso
+```{r}
+cat("\nPaso 4:\n----------------\n")
+print(add1(modelo3, scope = modeloMaximo))
+```
+Notas del modelo:
+
+Se reporta desviación nula en caso de incluir la variable Weight, por lo que no la usaremos.
+
+Solo Chest.diameter ofrece una disminución en AIC, pero una disminución de tan solo 0.178.
+
+Se concluye que el modelo con las variables Thigh.Girth, Wrist.Minimum.Girth y Height es el más adecuado.
 
 ### 7- Evaluar la confiabilidad de los modelos (i.e. que tengan un buen nivel de ajuste y son generalizables) y “arreglarlos” en caso de que tengan algún problema.
 
