@@ -72,7 +72,7 @@ datosPesoNormal[["EN"]] = 0
 ### 1- Definir la semilla a utilizar, que corresponde a los últimos cuatro dígitos del RUN (sin considerar el dígito verificador) del integrante de mayor edad del equipo.
 
 ```{r seed}
-set.seed(4545)  # semilla impar, tomamos muestra de 150 hombres
+set.seed(4545)  # semilla impar, tomamos muestra de 150 hombres 5795
 ```
 
 ### 2- Seleccionar una muestra de 150 mujeres (si la semilla es un número par) o 150 hombres (si la semilla es impar), asegurando que la mitad tenga estado nutricional “sobrepeso” y la otra mitad “no sobrepeso” en cada caso. Dividir esta muestra en dos conjuntos: los datos de 100 personas (50 con EN “sobrepeso”) para utilizar en la construcción de los modelos y 50 personas (25 con EN “sobrepeso”) para poder evaluarlos.
@@ -148,7 +148,7 @@ cat("\nPaso 2:\n----------------\n")
 print(add1(modelo1, scope = modeloMaximo))
 ```
 
-El siguiente valor más apto de agregar es "Wrist.Minimum.Girth",  se actualiza y se reviza el modelo
+El siguiente valor más apto de agregar es "Wrist.Minimum.Girth",  se actualiza y se revisa el modelo
 ```{r}
 modelo2 <- update(modelo1, . ~ . + Wrist.Minimum.Girth)
 print(summary(modelo2))
@@ -194,11 +194,129 @@ Se concluye que el modelo con las variables Thigh.Girth, Wrist.Minimum.Girth y H
 
 ### 7- Evaluar la confiabilidad de los modelos (i.e. que tengan un buen nivel de ajuste y son generalizables) y “arreglarlos” en caso de que tengan algún problema.
 
-```{r evaluacion}
+#### Confiabilidad en los modelos
+
+```{r Ajuste}
+# Comparación del modelo univariado con el modelo nulo (para bondad de ajuste del modelo univariado)
+univar_lrt <- anova(modelo, test = "LRT")
+
+# Comparación del modelo multivariado con el modelo univariado (para bondad de ajuste del modelo multivariado)
+multivar_lrt <- anova(modelo, modelo3, test = "LRT")
+
+cat("Bondad de ajuste del modelo univariado (Waist.Girth vs modelo nulo):\n")
+print(univar_lrt)
+cat("\n")
+cat("Bondad de ajuste del modelo multivariado (Thigh.Girth + Wrist.Minimum.Girth + Height vs Waist.Girth):\n")
+print(multivar_lrt)
+
+```
+La comparación entre el modelo nulo y el modelo univariado (con Waist.Girth) muestra un valor p < 0.001, lo que indica que agregar la variable Waist.Girth mejora significativamente el ajuste del modelo respecto al modelo sin predictores.
+
+Asimismo, la comparación entre el modelo univariado y el modelo multivariado (con Thigh.Girth, Wrist.Minimum.Girth y Height) también tiene un valor p < 0.001, indicando que la inclusión de estas variables adicionales produce una mejora estadísticamente significativa en el ajuste del modelo frente al que sólo contenía Waist.Girth.
+
+En conclusión, ambos modelos logran una buena bondad de ajuste bajo el criterio alfa = 0.001. El modelo univariado es significativamente mejor que el nulo, y el modelo multivariado es significativamente mejor que el univariado, demostrando que la inclusión de las variables seleccionadas permite un mejor ajuste para predecir la variable EN.
+
+```{r Prueba de curvatura para el predictor del modelo univariado}
+cat("Prueba de curvatura para el predictor del modelo univariado:\n")
+residualPlots(modelo, type="rstandard", fitted = FALSE,
+              smooth = list(col="red"))
 
 ```
 
-### 8- Usando código estándar, evaluar el poder predictivo de los modelos con los datos de las 50 personas que no se incluyeron en su construcción en términos de sensibilidad y especificidad.
+```{r Prueba de curvatura para los predictores del modelo multivariado}
+cat("Prueba de curvatura para los predictores del modelo multivariado:\n")
+residualPlots(modelo3, type = "rstandard", smooth = list(col="magenta"))
+
+```
+**Conclusión de las pruebas de curvatura (linealidad) sobre los predictores:**
+
+Modelo univariado (con Waist.Girth):
+El valor p (0.8628) es muy alto, lo que indica que no hay evidencia estadísticamente significativa de curvatura en la relación entre la variable Waist.Girth y el logit de la variable respuesta. En otras palabras, no se detecta una violación del supuesto de linealidad en el logit para este predictor. Esta variable puede considerarse adecuadamente modelada de forma lineal.
+
+Modelo multivariado (con Thigh.Girth, Wrist.Minimum.Girth y Height):
+Para cada uno de los predictores (Thigh.Girth, Wrist.Minimum.Girth, Height), los valores p (0.4778, 0.1507, 0.3766 respectivamente) también indican ausencia de evidencia significativa de curvatura. Esto sugiere que ninguna de estas variables muestra un patrón curvo o no lineal importante respecto a la respuesta en el modelo. Cada predictor parece adecuadamente capturado mediante una relación lineal en el logit.
+
+#### Casos sobre influyentes
+
+Revisemos los residuos de student, apalancamiento y disancias de cook (representada por las áreas de los círculos)
+
+Modelo univariado:
+
+```{r Casos sobre influyentes}
+modelo_inf_plot <- influencePlot(modelo, id = list(n=3))
+
+cat("Casos influyentes para el modelo simple:\n")
+print(modelo_inf_plot)
+```
+Notamos que el caso 45, 251 y 25 podrían considerarse problemáticos por la distancia de Cook que presentan. Para evaluar estos utilizaremos la funcion `compareCoefs`
+
+```{r Análisis de casos problematicos para el modelo simple}
+modelo_inf_ids <- as.integer(rownames(modelo_inf_plot))
+
+modelo_comp_f <- function(s) {
+  mat <- eval(bquote(compareCoefs(modelo, update(modelo,subset = -.(s)),print=FALSE)))
+  rownames(mat) <- paste(rownames(mat), "Sin el caso", s)
+  invisible(mat)
+}
+
+modelo_comp_list <- lapply(modelo_inf_ids,modelo_comp_f)
+modelo_comp <- do.call(rbind, modelo_comp_list)
+
+# Agrego cambio porcentual
+Cambio <- abs((modelo_comp[, 1]-modelo_comp[, 3])/modelo_comp[,1])
+modelo_comp <- cbind(modelo_comp, Cambio)
+
+cat("Comparación de modelos univariados con y sin el caso problemático:\n")
+printCoefmat(modelo_comp, digits = 8)
+
+```
+
+Podemos ver que los cassos 25 y 45 provocan cambios en los coeficientes considereblamente mayores respecto a los demás cassos por lo que es conveniente eliminarles del modelo
+
+```{r Eliminar casos problemáticos}
+
+modelo <- update(modelo, subset = -c(25,45))
+cat("Modelo de regresión logística simple actualizado\n")
+print(summary(modelo))
+```
+**Ahora repetimos el proceso para el caso del modelo multivariado**
+
+```{r Casos sobre influyentes M}
+modelo3_inf_plot <- influencePlot(modelo3, id = list(m = 3))
+
+cat("Casos notorios para el modelo de RLogitM:\n")
+print(modelo3_inf_plot)
+# 47, 81, 15, 481, 39
+```
+Notamos que el caso 47, 81, 15, 481, 39 **podrían** considerarse problemáticos por la distancia de Cook que presentan. Para evaluar estos utilizaremos la funcion `compareCoefs` nuevamente
+
+```{r Análisis de casos problematicos para el modelo multiple}
+modelo3_inf_ids <- as.integer(rownames(modelo3_inf_plot))
+
+modelo3_comp_f <- function(s) {
+  mat <- eval(bquote(compareCoefs(modelo3, update(modelo3,subset = -.(s)),print=FALSE)))
+  rownames(mat) <- paste(rownames(mat), "Sin el caso", s)
+  invisible(mat)
+}
+
+modelo3_comp_list <- lapply(modelo3_inf_ids,modelo3_comp_f)
+modelo3_comp <- do.call(rbind, modelo3_comp_list)
+
+# Agrego cambio porcentual
+Cambio <- abs((modelo3_comp[, 1]-modelo3_comp[, 3])/modelo3_comp[,1]) * 100
+modelo3_comp <- cbind(modelo3_comp, Cambio)
+
+cat("Comparación de modelos multivariados con y sin el caso problemático:\n")
+printCoefmat(modelo3_comp, digits = 2)
+
+```
+La comparación muestra que remover la mayoría de los casos no altera de manera significativa los coeficientes (cambios de 0% a aproximadamente 1%). Sin embargo, eliminar el caso 47 produce los mayores cambios porcentuales, llegando hasta un 4.5% en las estimaciones. Esto indica que el caso 47 es el más influyente y su remoción sería la más conveniente para mejorar el ajuste del modelo.
+
+Los otros casos (15, 81, 481, 39) muestran cambios muy cercanos a cero en los coeficientes al ser removidos, lo que indica que su influencia sobre el modelo es mínima. Por el contrario, el caso 47 genera cambios porcentuales notables (superiores al 3%) en varios coeficientes. Esta diferencia de impacto sugiere que el caso 47 es claramente el más influyente y problemático, y por lo tanto, su eliminación es la que más podría beneficiar la mejora del modelo.
+
+Con estos cambios realizados logramos mejorar los modelos.
+
+### 8- Usando código estándar (es decir, sin usar el paquete `caret`), evaluar el poder predictivo de los modelos con los datos de las 50 personas que no se incluyeron en su construcción en términos de sensibilidad y especificidad.
 
 ```{r pruebas}
 
