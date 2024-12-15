@@ -314,6 +314,13 @@ La comparación muestra que remover la mayoría de los casos no altera de manera
 
 Los otros casos (15, 81, 481, 39) muestran cambios muy cercanos a cero en los coeficientes al ser removidos, lo que indica que su influencia sobre el modelo es mínima. Por el contrario, el caso 47 genera cambios porcentuales notables (superiores al 3%) en varios coeficientes. Esta diferencia de impacto sugiere que el caso 47 es claramente el más influyente y problemático, y por lo tanto, su eliminación es la que más podría beneficiar la mejora del modelo.
 
+```{r Eliminar casos problemáticos M}
+
+modelo3 <- update(modelo3, subset = -c(47))
+cat("Modelo de regresión logística múltiple actualizado\n")
+print(summary(modelo3))
+```
+
 Con estos cambios realizados logramos mejorar los modelos.
 
 ### 8- Usando código estándar (es decir, sin usar el paquete `caret`), evaluar el poder predictivo de los modelos con los datos de las 50 personas que no se incluyeron en su construcción en términos de sensibilidad y especificidad.
