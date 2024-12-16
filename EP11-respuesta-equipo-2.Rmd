@@ -1,0 +1,98 @@
+---
+title: "EP11-respuesta-equipo-2"
+date: "2024-12-16"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+options(repos = c(CRAN = "https://cran.rstudio.com/"))
+
+if (!requireNamespace('tidyverse', quietly = TRUE)){
+  install.packages('tidyverse')
+}
+library(tidyverse)
+if (!requireNamespace('ggpubr', quietly = TRUE)){
+  install.packages('ggpubr')
+}
+library(car)
+if (!requireNamespace('car', quietly = TRUE)){
+  install.packages('car')
+}
+library(ggpubr)
+if (!requireNamespace('ez', quietly = TRUE)){
+  install.packages('ez')
+}
+library(ez)
+if (!requireNamespace('RVAideMemoire', quietly = TRUE)){
+  install.packages('RVAideMemoire')
+}
+library(RVAideMemoire)
+if (!requireNamespace('rcompanion', quietly = TRUE)){
+  install.packages('rcompanion')
+}
+library(rcompanion)
+if (!requireNamespace('dplyr', quietly = TRUE)){
+  install.packages('dplyr')
+}
+library(dplyr)
+if (!requireNamespace('WRS2', quietly = TRUE)){
+  install.packages('WRS2')
+}
+library(WRS2)
+if (!requireNamespace('caret', quietly = TRUE)){
+  install.packages('caret')
+}
+library(caret)
+if (!requireNamespace('leaps', quietly = TRUE)){
+  install.packages('leaps')
+}
+library(leaps)
+```
+
+#### CONTEXTO
+#### Usando los datos de medidas anatómicas recolectados por Heinz et al. (2003) que ya conocimos en el ejercicio práctico anterior:
+
+```{r datos}
+datosGenerales <- read.csv2("EP09 Datos.csv")
+head(datosGenerales)
+```
+
+#### Agregar variable EN e IMC.
+
+```{r IMC}
+datosGenerales[["IMC"]] = datosGenerales[["Weight"]] / ((datosGenerales[["Height"]]/100)^2)
+datosSobrepeso = datosGenerales %>% filter(IMC < 23.2)
+datosPesoNormal = datosGenerales %>% filter(IMC >= 23.2)
+datosSobrepeso[["EN"]] = 1
+datosPesoNormal[["EN"]] = 0
+```
+#### Definir la semilla a utilizar, que corresponde a los primeros cinco dígitos del RUN del integrante de mayor edad del equipo.
+```{r seed}
+set.seed(4595)
+```
+#### Seleccionar una muestra de 100 personas, asegurando que la mitad tenga estado nutricional “sobrepeso” y la otra mitad “no sobrepeso”.
+```{r datos2}
+datosSobrepeso = datosSobrepeso %>% filter(Gender == 1) %>% sample_n(75)
+datosPesoNormal = datosPesoNormal %>% filter(Gender == 1) %>% sample_n(75)
+
+idatosSobre = sample.int(50)
+idatosNormal = sample.int(50)
+
+datos = rbind(datosSobrepeso[idatosSobre,], datosPesoNormal[idatosNormal,])
+```
+#### Usando las herramientas del paquete leaps, realizar una búsqueda exhaustiva para seleccionar entre dos y ocho predictores que ayuden a estimar la variable Peso (Weight), obviamente sin considerar las nuevas variables IMC ni EN, y luego utilizar las funciones del paquete caret para construir un modelo de regresión lineal múltiple con los predictores escogidos y evaluarlo usando bootstrapping.
+```{r modelo}
+
+```
+#### Haciendo un poco de investigación sobre el paquete caret, en particular cómo hacer Recursive Feature Elimination (RFE), construir un modelo de regresión lineal múltiple para predecir la variable IMC que incluya entre 10 y 20 predictores, seleccionando el conjunto de variables que maximice R2 y que use cinco repeticiones de validación cruzada de cinco pliegues para evitar el sobreajuste (obviamente no se debe considerar las variables Peso, Estatura ni estado nutricional –Weight, Height, EN respectivamente).
+```{r modelo}
+
+```
+#### Usando RFE, construir un modelo de regresión logística múltiple para la variable EN que incluya el conjunto de predictores, entre dos y seis, que entregue la mejor curva ROC y que utilice validación cruzada dejando uno fuera para evitar el sobreajuste (obviamente no se debe considerar las variables Peso, Estatura –Weight y Height respectivamente– ni IMC).
+```{r modelo}
+
+```
+#### Pronunciarse sobre la confiabilidad y el poder predictivo de los modelos obtenidos.
+```{r modelo}
+
+```
