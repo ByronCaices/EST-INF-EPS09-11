@@ -382,23 +382,13 @@ cat("Sensibilidad:", sensibilidad_multi, "\n")
 cat("Especificidad:", especificidad_multi, "\n")
 
 ```
-A partir de los resultados obtenidos, se pueden extraer las siguientes conclusiones:
+A partir de estos resultados se puede concluir que:
 
-1. **Modelo Univariado:**  
-   - Sensibilidad: 0.84  
-     Esto significa que el 84% de las personas con sobrepeso (EN = 1) fueron correctamente identificadas por el modelo.  
-   - Especificidad: 0.80  
-     El 80% de las personas sin sobrepeso (EN = 0) fueron clasificadas correctamente como tales.  
+- Ambos modelos presentan la misma sensibilidad (0.84), es decir, ambos identifican correctamente el 84% de los casos de sobrepeso (positivos).
 
-   En términos generales, el modelo univariado realiza un buen trabajo identificando casos positivos y negativos, pero su especificidad podría ser un poco mejor.
+- En cuanto a la especificidad, el modelo multivariado supera al univariado. Mientras el modelo univariado tiene una especificidad de 0.80 (fallando en un 20% de los casos negativos), el modelo multivariado alcanza una especificidad de 1.0, lo cual significa que identifica correctamente todos los casos no sobrepeso (no presenta falsos positivos).
 
-2. **Modelo Multivariado:**  
-   - Sensibilidad: 0.84  
-     Al igual que el univariado, el modelo multivariado identifica correctamente al 84% de las personas con sobrepeso.  
-   - Especificidad: 0.84  
-     El modelo multivariado mejora en la identificación correcta de personas sin sobrepeso, llegando a un 84% de especificidad.
-
-En comparación con el modelo univariado, el modelo multivariado mantiene la misma capacidad para detectar casos positivos (misma sensibilidad), pero mejora en la identificación de los casos negativos (aumenta la especificidad). Esto lo convierte en un modelo más balanceado a la hora de predecir el estado nutricional, mostrando un mejor desempeño global en el conjunto de prueba.
+En otras palabras, aunque ambos modelos son igualmente buenos detectando a las personas con sobrepeso, el modelo multivariado es más preciso diferenciando a las personas sin sobrepeso. Esto sugiere que el modelo multivariado ofrece un mejor rendimiento global y una mayor confiabilidad al clasificar a los individuos de la muestra.
 
 ### Referencias:
 
