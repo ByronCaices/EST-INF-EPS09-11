@@ -330,7 +330,75 @@ Con estos cambios realizados logramos mejorar los modelos.
 
 ```{r pruebas}
 
+#### Evaluación Modelo Univariado (modelo) ####
+# Obtener probabilidades predichas
+pred_prob_uni <- predict(modelo, newdata = datosPrueba, type = "response")
+
+# Asignar clase predicha en base al umbral 0.5
+pred_class_uni <- ifelse(pred_prob_uni >= 0.5, 1, 0)
+
+# Matriz de confusión
+cm_uni <- table("Observado" = datosPrueba$EN, "Predicho" = pred_class_uni)
+cat("Matriz de confusión - Modelo Univariado:\n")
+print(cm_uni)
+
+# Cálculo de sensibilidad y especificidad
+TP_uni <- cm_uni["1", "1"]
+FN_uni <- cm_uni["1", "0"]
+TN_uni <- cm_uni["0", "0"]
+FP_uni <- cm_uni["0", "1"]
+
+sensibilidad_uni <- TP_uni / (TP_uni + FN_uni)
+especificidad_uni <- TN_uni / (TN_uni + FP_uni)
+
+cat("\n--- Modelo Univariado ---\n")
+cat("Sensibilidad:", sensibilidad_uni, "\n")
+cat("Especificidad:", especificidad_uni, "\n\n")
+
+
+#### Evaluación Modelo Multivariado (modelo3) ####
+# Obtener probabilidades predichas
+pred_prob_multi <- predict(modelo3, newdata = datosPrueba, type = "response")
+
+# Asignar clase predicha en base al umbral 0.5
+pred_class_multi <- ifelse(pred_prob_multi >= 0.5, 1, 0)
+
+# Matriz de confusión
+cm_multi <- table("Observado" = datosPrueba$EN, "Predicho" = pred_class_multi)
+cat("Matriz de confusión - Modelo Multivariado:\n")
+print(cm_multi)
+
+# Cálculo de sensibilidad y especificidad
+TP_multi <- cm_multi["1", "1"]
+FN_multi <- cm_multi["1", "0"]
+TN_multi <- cm_multi["0", "0"]
+FP_multi <- cm_multi["0", "1"]
+
+sensibilidad_multi <- TP_multi / (TP_multi + FN_multi)
+especificidad_multi <- TN_multi / (TN_multi + FP_multi)
+
+cat("\n--- Modelo Multivariado ---\n")
+cat("Sensibilidad:", sensibilidad_multi, "\n")
+cat("Especificidad:", especificidad_multi, "\n")
+
 ```
+A partir de los resultados obtenidos, se pueden extraer las siguientes conclusiones:
+
+1. **Modelo Univariado:**  
+   - Sensibilidad: 0.84  
+     Esto significa que el 84% de las personas con sobrepeso (EN = 1) fueron correctamente identificadas por el modelo.  
+   - Especificidad: 0.80  
+     El 80% de las personas sin sobrepeso (EN = 0) fueron clasificadas correctamente como tales.  
+
+   En términos generales, el modelo univariado realiza un buen trabajo identificando casos positivos y negativos, pero su especificidad podría ser un poco mejor.
+
+2. **Modelo Multivariado:**  
+   - Sensibilidad: 0.84  
+     Al igual que el univariado, el modelo multivariado identifica correctamente al 84% de las personas con sobrepeso.  
+   - Especificidad: 0.84  
+     El modelo multivariado mejora en la identificación correcta de personas sin sobrepeso, llegando a un 84% de especificidad.
+
+En comparación con el modelo univariado, el modelo multivariado mantiene la misma capacidad para detectar casos positivos (misma sensibilidad), pero mejora en la identificación de los casos negativos (aumenta la especificidad). Esto lo convierte en un modelo más balanceado a la hora de predecir el estado nutricional, mostrando un mejor desempeño global en el conjunto de prueba.
 
 ### Referencias:
 
