@@ -121,9 +121,9 @@ summary(modelo)
 Para esto usaremos regresion paso a paso hacia adelante
 ```{r modelo multiple}
 # Datos con solo predictores:
-datosPredictores <- datosEntrenamiento[, c("EN", predictores)]
+datosPredictores <- datosEntrenamiento[, c("EN", predictores, "Waist.Girth")]
 
-modeloNulo <- glm(EN ~ 1, data = datosPredictores, family = binomial(link = "logit"))
+modeloNulo <- glm(EN ~ Waist.Girth, data = datosPredictores, family = binomial(link = "logit"))
 modeloMaximo <- glm(EN ~ ., data = datosPredictores, family = binomial(link = "logit"))
 
 # Revisar un paso hacia adelante
@@ -138,9 +138,9 @@ print(summary(modelo1))
 ```
 Notas del modelo:
 
-+ p-value de Thigh.Girth: 8.5e-07 (significativo)
++ p-value de Thigh.Girth: 7.60e-05 (significativo)
 
-AIC: 79.212
+AIC: 69.592
 
 Se continua al siguiente paso
 ```{r}
@@ -148,17 +148,17 @@ cat("\nPaso 2:\n----------------\n")
 print(add1(modelo1, scope = modeloMaximo))
 ```
 
-El siguiente valor más apto de agregar es "Wrist.Minimum.Girth",  se actualiza y se revisa el modelo
+El siguiente valor más apto de agregar es "Height",  se actualiza y se revisa el modelo
 ```{r}
-modelo2 <- update(modelo1, . ~ . + Wrist.Minimum.Girth)
+modelo2 <- update(modelo1, . ~ . + Height)
 print(summary(modelo2))
 ```
 Notas del modelo:
 
-+ p-value de Thigh.Girth: 4.15e-06 (significativo)
-+ p-value de Wrist.Minimum.Girth: 0.0194 (significativo)
++ p-value de Thigh.Girth: 0.000125 (significativo)
++ p-value de Height: 0.003333 (significativo)
 
-AIC: 75.176 (una disminución de 4.036 respecto al modelo sin Wrist.Minimum.Girth)
+AIC: 59.571 (una disminución de 10.021 respecto al modelo sin Height)
 
 Se continua al siguiente paso
 ```{r}
@@ -166,18 +166,20 @@ cat("\nPaso 3:\n----------------\n")
 print(add1(modelo2, scope = modeloMaximo))
 ```
 
-El siguiente valor más apto de agregar es "Height",  se actualiza y se reviza el modelo
+El siguiente valor más apto de agregar es "Wrist.Minimum.Girth",  se actualiza y se reviza el modelo
 ```{r}
-modelo3 <- update(modelo2, . ~ . + Height)
+modelo3 <- update(modelo2, . ~ . + Wrist.Minimum.Girth)
 print(summary(modelo3))
 ```
 Notas del modelo:
 
-+ p-value de Thigh.Girth: 3.22e-06 (significativo)
-+ p-value de Wrist.Minimum.Girth: 0.003696 (significativo)
-+ p-value de Height: 0.007628 (significativo)
+Se reporta desviación nula en caso de incluir la variable Weight, por lo que no la usaremos.
 
-AIC: 67.606 (una disminución de 7.57 respecto al modelo sin Height)
++ p-value de Thigh.Girth: 7.36e-05 (significativo)
++ p-value de Height: 0.00115  (significativo)
++ p-value de Wrist.Minimum.Girth: 0.00705 (significativo)
+
+AIC: 49.842 (una disminución de aproximadamente 10 respecto al modelo sin Wrist.Minimum.Girth)
 
 Se continua al siguiente paso
 ```{r}
@@ -188,9 +190,9 @@ Notas del modelo:
 
 Se reporta desviación nula en caso de incluir la variable Weight, por lo que no la usaremos.
 
-Solo Chest.diameter ofrece una disminución en AIC, pero una disminución de tan solo 0.178.
+Solo Calf.Maximum.Girth ofrece una disminución en AIC, pero una disminución de tan solo 0.340.
 
-Se concluye que el modelo con las variables Thigh.Girth, Wrist.Minimum.Girth y Height es el más adecuado.
+Se concluye que el modelo con la variable Waist.Girth más las variables Thigh.Girth, Wrist.Minimum.Girth y Height es el más adecuado.
 
 ### 7- Evaluar la confiabilidad de los modelos (i.e. que tengan un buen nivel de ajuste y son generalizables) y “arreglarlos” en caso de que tengan algún problema.
 
@@ -231,10 +233,10 @@ residualPlots(modelo3, type = "rstandard", smooth = list(col="magenta"))
 **Conclusión de las pruebas de curvatura (linealidad) sobre los predictores:**
 
 Modelo univariado (con Waist.Girth):
-El valor p (0.8628) es muy alto, lo que indica que no hay evidencia estadísticamente significativa de curvatura en la relación entre la variable Waist.Girth y el logit de la variable respuesta. En otras palabras, no se detecta una violación del supuesto de linealidad en el logit para este predictor. Esta variable puede considerarse adecuadamente modelada de forma lineal.
+El valor p (0.8485) es muy alto, lo que indica que no hay evidencia estadísticamente significativa de curvatura en la relación entre la variable Waist.Girth y el logit de la variable respuesta. En otras palabras, no se detecta una violación del supuesto de linealidad en el logit para este predictor. Esta variable puede considerarse adecuadamente modelada de forma lineal.
 
-Modelo multivariado (con Thigh.Girth, Wrist.Minimum.Girth y Height):
-Para cada uno de los predictores (Thigh.Girth, Wrist.Minimum.Girth, Height), los valores p (0.4778, 0.1507, 0.3766 respectivamente) también indican ausencia de evidencia significativa de curvatura. Esto sugiere que ninguna de estas variables muestra un patrón curvo o no lineal importante respecto a la respuesta en el modelo. Cada predictor parece adecuadamente capturado mediante una relación lineal en el logit.
+Modelo multivariado (con Waist.Girth, Thigh.Girth, Wrist.Minimum.Girth y Height):
+Para cada uno de los predictores (Waist.Girth, Thigh.Girth, Height, Wrist.Minimum.Girth), los valores p (0.8402, 0.6457, 0.4191, 0.1781 respectivamente) también indican ausencia de evidencia significativa de curvatura. Esto sugiere que ninguna de estas variables muestra un patrón curvo o no lineal importante respecto a la respuesta en el modelo. Cada predictor parece adecuadamente capturado mediante una relación lineal en el logit.
 
 #### Casos sobre influyentes
 
@@ -248,7 +250,7 @@ modelo_inf_plot <- influencePlot(modelo, id = list(n=3))
 cat("Casos influyentes para el modelo simple:\n")
 print(modelo_inf_plot)
 ```
-Notamos que el caso 45, 251 y 25 podrían considerarse problemáticos por la distancia de Cook que presentan. Para evaluar estos utilizaremos la funcion `compareCoefs`
+Notamos que el caso 10, 11, 131 y 141 podrían considerarse problemáticos por la distancia de Cook que presentan. Para evaluar estos utilizaremos la funcion `compareCoefs`
 
 ```{r Análisis de casos problematicos para el modelo simple}
 modelo_inf_ids <- as.integer(rownames(modelo_inf_plot))
@@ -263,19 +265,20 @@ modelo_comp_list <- lapply(modelo_inf_ids,modelo_comp_f)
 modelo_comp <- do.call(rbind, modelo_comp_list)
 
 # Agrego cambio porcentual
-Cambio <- abs((modelo_comp[, 1]-modelo_comp[, 3])/modelo_comp[,1])
+Cambio <- abs((modelo_comp[, 1]-modelo_comp[, 3])/modelo_comp[,1]) * 100
 modelo_comp <- cbind(modelo_comp, Cambio)
+
 
 cat("Comparación de modelos univariados con y sin el caso problemático:\n")
 printCoefmat(modelo_comp, digits = 8)
 
 ```
 
-Podemos ver que los cassos 25 y 45 provocan cambios en los coeficientes considereblamente mayores respecto a los demás cassos por lo que es conveniente eliminarles del modelo
+Podemos ver que nínguno de los casos provaca cambios en los coeficientes mucho mayores que los demás, por lo tanto no se debería elimina ningún caso, cabe resaltar que el caso 131 es el que provoca los mayores cambios, por lo que si bien no es significativo frente a los demás provamosel modelo eliminandolo
 
 ```{r Eliminar casos problemáticos}
 
-modelo <- update(modelo, subset = -c(25,45))
+modelo <- update(modelo, subset = -c(131))
 cat("Modelo de regresión logística simple actualizado\n")
 print(summary(modelo))
 ```
@@ -286,9 +289,9 @@ modelo3_inf_plot <- influencePlot(modelo3, id = list(m = 3))
 
 cat("Casos notorios para el modelo de RLogitM:\n")
 print(modelo3_inf_plot)
-# 47, 81, 15, 481, 39
+# 10, 11, 22, 181
 ```
-Notamos que el caso 47, 81, 15, 481, 39 **podrían** considerarse problemáticos por la distancia de Cook que presentan. Para evaluar estos utilizaremos la funcion `compareCoefs` nuevamente
+Notamos que el caso 11 y 22 **podrían** considerarse problemáticos por la distancia de Cook que presentan. Para evaluar estos utilizaremos la funcion `compareCoefs` nuevamente
 
 ```{r Análisis de casos problematicos para el modelo multiple}
 modelo3_inf_ids <- as.integer(rownames(modelo3_inf_plot))
@@ -310,13 +313,13 @@ cat("Comparación de modelos multivariados con y sin el caso problemático:\n")
 printCoefmat(modelo3_comp, digits = 2)
 
 ```
-La comparación muestra que remover la mayoría de los casos no altera de manera significativa los coeficientes (cambios de 0% a aproximadamente 1%). Sin embargo, eliminar el caso 47 produce los mayores cambios porcentuales, llegando hasta un 4.5% en las estimaciones. Esto indica que el caso 47 es el más influyente y su remoción sería la más conveniente para mejorar el ajuste del modelo.
+La comparación muestra que remover la mayoría de los casos no altera de manera significativa los coeficientes (cambios de 0% a aproximadamente 1%). Sin embargo, eliminar el caso 22 produce los mayores cambios porcentuales, llegando hasta un 1.7% en las estimaciones. Esto indica que el caso 47 es el más influyente y su remoción sería la más conveniente para mejorar el ajuste del modelo.
 
-Los otros casos (15, 81, 481, 39) muestran cambios muy cercanos a cero en los coeficientes al ser removidos, lo que indica que su influencia sobre el modelo es mínima. Por el contrario, el caso 47 genera cambios porcentuales notables (superiores al 3%) en varios coeficientes. Esta diferencia de impacto sugiere que el caso 47 es claramente el más influyente y problemático, y por lo tanto, su eliminación es la que más podría beneficiar la mejora del modelo.
+Los otros casos (10, 11, 181) muestran cambios muy cercanos a cero en los coeficientes al ser removidos, lo que indica que su influencia sobre el modelo es mínima. Por el contrario, el caso 22 genera cambios porcentuales notables (superiores al 0.5%) en varios coeficientes. Esta diferencia de impacto sugiere que el caso 22 es claramente el más influyente y problemático, y por lo tanto, su eliminación es la que más podría beneficiar la mejora del modelo.
 
 ```{r Eliminar casos problemáticos M}
 
-modelo3 <- update(modelo3, subset = -c(47))
+modelo3 <- update(modelo3, subset = -c(22))
 cat("Modelo de regresión logística múltiple actualizado\n")
 print(summary(modelo3))
 ```
