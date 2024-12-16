@@ -250,7 +250,7 @@ modelo_inf_plot <- influencePlot(modelo, id = list(n=3))
 cat("Casos influyentes para el modelo simple:\n")
 print(modelo_inf_plot)
 ```
-Notamos que el caso 10, 11, 131 y 141 podrían considerarse problemáticos por la distancia de Cook que presentan. Para evaluar estos utilizaremos la funcion `compareCoefs`
+Notamos que el caso 10, 11,61, 71, 131 y 341 podrían considerarse problemáticos por la distancia de Cook que presentan. Para evaluar estos utilizaremos la funcion `compareCoefs`
 
 ```{r Análisis de casos problematicos para el modelo simple}
 modelo_inf_ids <- as.integer(rownames(modelo_inf_plot))
@@ -274,7 +274,7 @@ printCoefmat(modelo_comp, digits = 8)
 
 ```
 
-Podemos ver que nínguno de los casos provaca cambios en los coeficientes mucho mayores que los demás, por lo tanto no se debería elimina ningún caso, cabe resaltar que el caso 131 es el que provoca los mayores cambios, por lo que si bien no es significativo frente a los demás provamosel modelo eliminandolo
+Podemos ver que nínguno de los casos provaca cambios en los coeficientes mucho mayores que los demás, por lo tanto no se debería elimina ningún caso, cabe resaltar que el caso 61 y 71 es el que provoca los mayores cambios, por lo que si bien no es significativo frente a los demás provamosel modelo eliminandolo
 
 ```{r Eliminar casos problemáticos}
 
@@ -291,7 +291,7 @@ cat("Casos notorios para el modelo de RLogitM:\n")
 print(modelo3_inf_plot)
 # 10, 11, 22, 181
 ```
-Notamos que el caso 11 y 22 **podrían** considerarse problemáticos por la distancia de Cook que presentan. Para evaluar estos utilizaremos la funcion `compareCoefs` nuevamente
+Notamos que el caso 10, 11, 22 y 181 **podrían** considerarse problemáticos por la distancia de Cook que presentan. Para evaluar estos utilizaremos la funcion `compareCoefs` nuevamente
 
 ```{r Análisis de casos problematicos para el modelo multiple}
 modelo3_inf_ids <- as.integer(rownames(modelo3_inf_plot))
@@ -313,7 +313,7 @@ cat("Comparación de modelos multivariados con y sin el caso problemático:\n")
 printCoefmat(modelo3_comp, digits = 2)
 
 ```
-La comparación muestra que remover la mayoría de los casos no altera de manera significativa los coeficientes (cambios de 0% a aproximadamente 1%). Sin embargo, eliminar el caso 22 produce los mayores cambios porcentuales, llegando hasta un 1.7% en las estimaciones. Esto indica que el caso 47 es el más influyente y su remoción sería la más conveniente para mejorar el ajuste del modelo.
+La comparación muestra que remover la mayoría de los casos no altera de manera significativa los coeficientes (cambios de 0% a aproximadamente 1%). Sin embargo, eliminar el caso 22 produce los mayores cambios porcentuales, llegando hasta un 2.7% en las estimaciones. Esto indica que el caso 47 es el más influyente y su remoción sería la más conveniente para mejorar el ajuste del modelo.
 
 Los otros casos (10, 11, 181) muestran cambios muy cercanos a cero en los coeficientes al ser removidos, lo que indica que su influencia sobre el modelo es mínima. Por el contrario, el caso 22 genera cambios porcentuales notables (superiores al 0.5%) en varios coeficientes. Esta diferencia de impacto sugiere que el caso 22 es claramente el más influyente y problemático, y por lo tanto, su eliminación es la que más podría beneficiar la mejora del modelo.
 
