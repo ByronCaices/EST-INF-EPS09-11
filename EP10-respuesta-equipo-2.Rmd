@@ -49,7 +49,7 @@ datosGenerales <- read.csv2("EP09 Datos.csv")
 head(datosGenerales)
 ```
 
-#### se nos pide realizar lo siguiente:
+#### Se nos pide realizar lo siguiente:
 
 #### 1. El equipo crea la variable IMC (índice de masa corporal) como el peso de una persona (en kilogramos) dividida por el cuadrado de su estatura (en metros).
 
@@ -118,7 +118,7 @@ summary(modelo)
 
 ### 6- Usando estas herramientas para la exploración de modelos del entorno R, buscar entre dos y cinco predictores de entre las variables seleccionadas al azar, recordadas en el punto 3, para agregar al modelo obtenido en el paso 5.
 
-Para esto usaremos regresion paso a paso hacia adelante
+Para esto usaremos regresión paso a paso hacia adelante
 ```{r modelo multiple}
 # Datos con solo predictores:
 datosPredictores <- datosEntrenamiento[, c("EN", predictores, "Waist.Girth")]
@@ -131,7 +131,7 @@ cat("\nPaso 1:\n----------------\n")
 print(add1(modeloNulo, scope = modeloMaximo))
 ```
 
-El valor más apto de agregar parece ser "Thigh.Girth", se actualiza y se reviza el modelo
+El valor más apto de agregar parece ser "Thigh.Girth", se actualiza y se revisa el modelo
 ```{r}
 modelo1 <- update(modeloNulo, . ~ . + Thigh.Girth)
 print(summary(modelo1))
@@ -142,7 +142,7 @@ Notas del modelo:
 
 AIC: 69.592
 
-Se continua al siguiente paso
+Se continúa al siguiente paso
 ```{r}
 cat("\nPaso 2:\n----------------\n")
 print(add1(modelo1, scope = modeloMaximo))
@@ -160,13 +160,13 @@ Notas del modelo:
 
 AIC: 59.571 (una disminución de 10.021 respecto al modelo sin Height)
 
-Se continua al siguiente paso
+Se continúa al siguiente paso
 ```{r}
 cat("\nPaso 3:\n----------------\n")
 print(add1(modelo2, scope = modeloMaximo))
 ```
 
-El siguiente valor más apto de agregar es "Wrist.Minimum.Girth",  se actualiza y se reviza el modelo
+El siguiente valor más apto de agregar es "Wrist.Minimum.Girth",  se actualiza y se revisa el modelo
 ```{r}
 modelo3 <- update(modelo2, . ~ . + Wrist.Minimum.Girth)
 print(summary(modelo3))
@@ -181,7 +181,7 @@ Se reporta desviación nula en caso de incluir la variable Weight, por lo que no
 
 AIC: 49.842 (una disminución de aproximadamente 10 respecto al modelo sin Wrist.Minimum.Girth)
 
-Se continua al siguiente paso
+Se continúa al siguiente paso
 ```{r}
 cat("\nPaso 4:\n----------------\n")
 print(add1(modelo3, scope = modeloMaximo))
@@ -240,7 +240,7 @@ Para cada uno de los predictores (Waist.Girth, Thigh.Girth, Height, Wrist.Minimu
 
 #### Casos sobre influyentes
 
-Revisemos los residuos de student, apalancamiento y disancias de cook (representada por las áreas de los círculos)
+Revisemos los residuos de student, apalancamiento y distancias de cook (representada por las áreas de los círculos)
 
 Modelo univariado:
 
@@ -250,7 +250,7 @@ modelo_inf_plot <- influencePlot(modelo, id = list(n=3))
 cat("Casos influyentes para el modelo simple:\n")
 print(modelo_inf_plot)
 ```
-Notamos que el caso 10, 11,61, 71, 131 y 341 podrían considerarse problemáticos por la distancia de Cook que presentan. Para evaluar estos utilizaremos la funcion `compareCoefs`
+Notamos que el caso 10, 11,61, 71, 131 y 341 podrían considerarse problemáticos por la distancia de Cook que presentan. Para evaluar estos utilizaremos la función `compareCoefs`
 
 ```{r Análisis de casos problematicos para el modelo simple}
 modelo_inf_ids <- as.integer(rownames(modelo_inf_plot))
@@ -274,7 +274,7 @@ printCoefmat(modelo_comp, digits = 8)
 
 ```
 
-Podemos ver que nínguno de los casos provaca cambios en los coeficientes mucho mayores que los demás, por lo tanto no se debería elimina ningún caso, cabe resaltar que el caso 61 y 71 es el que provoca los mayores cambios, por lo que si bien no es significativo frente a los demás provamosel modelo eliminandolo
+Podemos ver que ninguno de los casos provoca cambios en los coeficientes mucho mayores que los demás, por lo tanto, no se debería eliminar ningún caso, cabe resaltar que el caso 61 y 71 es el que provoca los mayores cambios, por lo que si bien no es significativo frente a los demás probamos el modelo eliminándolo
 
 ```{r Eliminar casos problemáticos}
 
@@ -291,7 +291,7 @@ cat("Casos notorios para el modelo de RLogitM:\n")
 print(modelo3_inf_plot)
 # 10, 11, 22, 181
 ```
-Notamos que el caso 10, 11, 22 y 181 **podrían** considerarse problemáticos por la distancia de Cook que presentan. Para evaluar estos utilizaremos la funcion `compareCoefs` nuevamente
+Notamos que el caso 10, 11, 22 y 181 **podrían** considerarse problemáticos por la distancia de Cook que presentan. Para evaluar estos utilizaremos la función `compareCoefs` nuevamente
 
 ```{r Análisis de casos problematicos para el modelo multiple}
 modelo3_inf_ids <- as.integer(rownames(modelo3_inf_plot))
