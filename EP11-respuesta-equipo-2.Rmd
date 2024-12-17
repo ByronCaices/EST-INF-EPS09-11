@@ -204,6 +204,11 @@ ncvTest(lm(Weight ~ Forearm.Girth, modelo_dataframe))
 ncvTest(lm(Weight ~ Knee.Girth, modelo_dataframe))
 ncvTest(lm(Weight ~ Height, modelo_dataframe))
 ```
+```{r graficos homo}
+marginalModelPlots(modelo_lm, sd = TRUE, 
+                   id = list(method = "r", n = 3, cex = 0.7, location = "lr"),
+                   col = "steelblue", pch = 20, col.line = c("steelblue","red"))
+```
 #### Haciendo un poco de investigación sobre el paquete caret, en particular cómo hacer Recursive Feature Elimination (RFE), construir un modelo de regresión lineal múltiple para predecir la variable IMC que incluya entre 10 y 20 predictores, seleccionando el conjunto de variables que maximice R2 y que use cinco repeticiones de validación cruzada de cinco pliegues para evitar el sobreajuste (obviamente no se debe considerar las variables Peso, Estatura ni estado nutricional –Weight, Height, EN respectivamente).
 ```{r modelo}
 
