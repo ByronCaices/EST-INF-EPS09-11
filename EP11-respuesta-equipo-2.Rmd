@@ -68,20 +68,68 @@ datosPesoNormal[["EN"]] = 0
 ```
 #### Definir la semilla a utilizar, que corresponde a los primeros cinco dígitos del RUN del integrante de mayor edad del equipo.
 ```{r seed}
-set.seed(4595)
+set.seed(20994)
 ```
 #### Seleccionar una muestra de 100 personas, asegurando que la mitad tenga estado nutricional “sobrepeso” y la otra mitad “no sobrepeso”.
 ```{r datos2}
-datosSobrepeso = datosSobrepeso %>% filter(Gender == 1) %>% sample_n(75)
-datosPesoNormal = datosPesoNormal %>% filter(Gender == 1) %>% sample_n(75)
+datosSobrepeso = datosSobrepeso %>% sample_n(50, replace = FALSE)
+datosPesoNormal = datosPesoNormal %>% sample_n(50, replace = FALSE)
 
-idatosSobre = sample.int(50)
-idatosNormal = sample.int(50)
-
-datos = rbind(datosSobrepeso[idatosSobre,], datosPesoNormal[idatosNormal,])
+datos = rbind(datosSobrepeso, datosPesoNormal)
 ```
 #### Usando las herramientas del paquete leaps, realizar una búsqueda exhaustiva para seleccionar entre dos y ocho predictores que ayuden a estimar la variable Peso (Weight), obviamente sin considerar las nuevas variables IMC ni EN, y luego utilizar las funciones del paquete caret para construir un modelo de regresión lineal múltiple con los predictores escogidos y evaluarlo usando bootstrapping.
 ```{r modelo}
+variable_a_predecir = "Weight"
+variables_prohibidas = c("EN", "IMC")
+
+modelo_dataframe<- datos %>% select(-(variables_prohibidas))
+modelo_formula <- formula(paste(variable_a_predecir, ".", sep = " ~ "))
+modelo_sets <- regsubsets(modelo_formula, data = modelo_dataframe, nbest = 2, nvmax = 8, method = "exhaustive")
+modelo_sets_resumen <- summary(modelo_sets)
+modelo_sets_i_mejor <- which.min(modelo_sets_resumen[["bic"]])
+modelo_final <- names(which(modelo_sets_resumen[["which"]][modelo_sets_i_mejor, ])[-1])
+
+plot(modelo_sets)
+
+
+cat("\nMejores predictores para el modelo de RLM 1:\n")
+print(modelo_final)
+```
+Usamos el paquete car y definimos la cantidad de repeticiones para bootstrap
+```{r modelo 2}
+texto <- paste(modelo_final, collapse = " + ")
+modelo_formula <- formula(paste(variable_a_predecir, texto, sep = " ~ "))
+
+B = 1000
+modelo_etrenado<- train(modelo_formula, data = modelo_dataframe, method = "lm",
+                    trControl = trainControl(method = "boot", number = B))
+modelo_final <- modelo_etrenado[["finalModel"]]
+
+cat("Modelo de modelo de RLM 1:\n")
+print(summary(modelo_final))
+```
+
+Verificar condiciones para la confiabilidad del modelo
+
+1- La varible de respuesta debe ser cuantitativa y continua
+
+Como la variables de respuesta es peso, se cumple esta condición
+
+2- Los predictores deben ser cuantitativos o diotomicos
+
+Como las variables elegidas fueron Elbows.diameter, Waist.Girth, Hip.Girth, Thigh.Girth, Bicep.Girth y Height son medidas, también se cumple esta condición
+
+3- Los predictores deben tener algún grado de variabilidad
+
+Como se puede observar, ningun predictor tiene desviación estandar 0
+
+Multicolinealidad
+Verificamos la multicolinealidad antes de seguir evaluando el modelo
+```{r}
+print(vif(modelo_final))
+```
+Para evitar problemas eliminamos los predictores Hip.Girth , Elbows.diameter y Thigh.Girth ya que tienen un VIF preocupante
+```{r}
 
 ```
 #### Haciendo un poco de investigación sobre el paquete caret, en particular cómo hacer Recursive Feature Elimination (RFE), construir un modelo de regresión lineal múltiple para predecir la variable IMC que incluya entre 10 y 20 predictores, seleccionando el conjunto de variables que maximice R2 y que use cinco repeticiones de validación cruzada de cinco pliegues para evitar el sobreajuste (obviamente no se debe considerar las variables Peso, Estatura ni estado nutricional –Weight, Height, EN respectivamente).
