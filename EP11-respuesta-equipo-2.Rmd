@@ -68,7 +68,7 @@ datosPesoNormal[["EN"]] = 0
 ```
 #### Definir la semilla a utilizar, que corresponde a los primeros cinco dígitos del RUN del integrante de mayor edad del equipo.
 ```{r seed}
-set.seed(20994)
+set.seed(20915)
 ```
 #### Seleccionar una muestra de 100 personas, asegurando que la mitad tenga estado nutricional “sobrepeso” y la otra mitad “no sobrepeso”.
 ```{r datos2}
@@ -93,7 +93,7 @@ plot(modelo_sets)
 
 
 cat("\nMejores predictores para el modelo de RLM 1:\n")
-print(modelo_final)
+print(modelo_variables)
 ```
 Usamos el paquete car y definimos la cantidad de repeticiones para bootstrap
 ```{r modelo 2}
@@ -118,7 +118,7 @@ Como la variables de respuesta es peso, se cumple esta condición
 
 2- Los predictores deben ser cuantitativos o diotomicos
 
-Como las variables elegidas fueron Elbows.diameter, Waist.Girth, Hip.Girth, Thigh.Girth, Bicep.Girth y Height son medidas, también se cumple esta condición
+Como las variables elegidas fueron Shoulder.Girth, Waist.Girth, Chest.Girth, Hip.Girth, Thigh.Girth, Forearm.Girth, Knee.Girth y Height son medidas, también se cumple esta condición
 
 3- Los predictores deben tener algún grado de variabilidad
 
@@ -130,9 +130,9 @@ Verificamos la multicolinealidad antes de seguir evaluando el modelo
 cat("Multicolinealidad\n")
 print(vif(modelo_final))
 ```
-Para evitar problemas eliminamos el predictor Hip.Girth, ya que tienen un VIF preocupante y volvemos a generar el modelo y evaluar la multicolinealidad
+Para evitar problemas eliminamos el predictor Chest.Girth, ya que tiene un VIF muy preocupante y volvemos a generar el modelo y evaluar la multicolinealidad
 ```{r}
-modelo_variables = modelo_variables[-3]
+modelo_variables = modelo_variables[-2]
 texto <- paste(modelo_variables, collapse = " + ")
 modelo_formula <- formula(paste(variable_a_predecir, texto, sep = " ~ "))
 
@@ -146,7 +146,7 @@ print(summary(modelo_final))
 
 print(vif(modelo_final))
 ```
-Como se puede ver el predictor Elbows.diameter  tiene un VIF preocupante por lo que repetimos el procedimiento anterior con esta variable
+Como se puede ver el predictor Shoulder.Girth  tiene un VIF preocupante por lo que repetimos el procedimiento anterior con esta variable
 ```{r}
 modelo_variables = modelo_variables[-1]
 texto <- paste(modelo_variables, collapse = " + ")
@@ -163,6 +163,33 @@ print(summary(modelo_final))
 print(vif(modelo_final))
 
 ```
+Como se puede ver el predictor Hip.Girth  tiene un VIF casi preocupante por lo que repetimos el procedimiento anterior con esta variable
+```{r}
+modelo_variables = modelo_variables[-2]
+texto <- paste(modelo_variables, collapse = " + ")
+modelo_formula <- formula(paste(variable_a_predecir, texto, sep = " ~ "))
+
+B = 1000
+modelo_etrenado<- train(modelo_formula, data = modelo_dataframe, method = "lm",
+                    trControl = trainControl(method = "boot", number = B))
+modelo_final <- modelo_etrenado[["finalModel"]]
+
+cat("Modelo de modelo de RLM 1:\n")
+print(summary(modelo_final))
+
+print(vif(modelo_final))
+
+```
+Ahora los predictores tienen VIF aceptables, además que podemos observar que el modelo reduce la varianza en un 96,5% aproximadamente respecto al modelo nulo
+
+Además procedemos a verificar las demás condiciones a partir del gráfico de residuos
+
+```{r}
+modelo_lm = lm(modelo_formula, modelo_dataframe)
+residualPlots(modelo_lm)
+ncvTest(modelo_lm)
+```
+Se puede observar que no exiten patrones reconocibles en ningún gráfico, además de cumplir las otras condiciones, hecho qie por lo que queda
 #### Haciendo un poco de investigación sobre el paquete caret, en particular cómo hacer Recursive Feature Elimination (RFE), construir un modelo de regresión lineal múltiple para predecir la variable IMC que incluya entre 10 y 20 predictores, seleccionando el conjunto de variables que maximice R2 y que use cinco repeticiones de validación cruzada de cinco pliegues para evitar el sobreajuste (obviamente no se debe considerar las variables Peso, Estatura ni estado nutricional –Weight, Height, EN respectivamente).
 ```{r modelo}
 
