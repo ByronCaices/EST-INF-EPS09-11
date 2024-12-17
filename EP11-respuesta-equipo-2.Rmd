@@ -108,6 +108,7 @@ modelo_final <- modelo_etrenado[["finalModel"]]
 cat("Modelo de modelo de RLM 1:\n")
 print(summary(modelo_final))
 ```
+**Evaluar modelo usando bootstrapping**
 
 Verificar condiciones para la confiabilidad del modelo
 
