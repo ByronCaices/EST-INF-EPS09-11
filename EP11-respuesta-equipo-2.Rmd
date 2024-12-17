@@ -87,7 +87,7 @@ modelo_formula <- formula(paste(variable_a_predecir, ".", sep = " ~ "))
 modelo_sets <- regsubsets(modelo_formula, data = modelo_dataframe, nbest = 2, nvmax = 8, method = "exhaustive")
 modelo_sets_resumen <- summary(modelo_sets)
 modelo_sets_i_mejor <- which.min(modelo_sets_resumen[["bic"]])
-modelo_final <- names(which(modelo_sets_resumen[["which"]][modelo_sets_i_mejor, ])[-1])
+modelo_variables <- names(which(modelo_sets_resumen[["which"]][modelo_sets_i_mejor, ])[-1])
 
 plot(modelo_sets)
 
@@ -97,7 +97,7 @@ print(modelo_final)
 ```
 Usamos el paquete car y definimos la cantidad de repeticiones para bootstrap
 ```{r modelo 2}
-texto <- paste(modelo_final, collapse = " + ")
+texto <- paste(modelo_variables, collapse = " + ")
 modelo_formula <- formula(paste(variable_a_predecir, texto, sep = " ~ "))
 
 B = 1000
@@ -126,10 +126,40 @@ Como se puede observar, ningun predictor tiene desviación estandar 0
 Multicolinealidad
 Verificamos la multicolinealidad antes de seguir evaluando el modelo
 ```{r}
+cat("Multicolinealidad\n")
 print(vif(modelo_final))
 ```
-Para evitar problemas eliminamos los predictores Hip.Girth , Elbows.diameter y Thigh.Girth ya que tienen un VIF preocupante
+Para evitar problemas eliminamos el predictor Hip.Girth, ya que tienen un VIF preocupante y volvemos a generar el modelo y evaluar la multicolinealidad
 ```{r}
+modelo_variables = modelo_variables[-3]
+texto <- paste(modelo_variables, collapse = " + ")
+modelo_formula <- formula(paste(variable_a_predecir, texto, sep = " ~ "))
+
+B = 1000
+modelo_etrenado<- train(modelo_formula, data = modelo_dataframe, method = "lm",
+                    trControl = trainControl(method = "boot", number = B))
+modelo_final <- modelo_etrenado[["finalModel"]]
+
+cat("Modelo de modelo de RLM 1:\n")
+print(summary(modelo_final))
+
+print(vif(modelo_final))
+```
+Como se puede ver el predictor Elbows.diameter  tiene un VIF preocupante por lo que repetimos el procedimiento anterior con esta variable
+```{r}
+modelo_variables = modelo_variables[-1]
+texto <- paste(modelo_variables, collapse = " + ")
+modelo_formula <- formula(paste(variable_a_predecir, texto, sep = " ~ "))
+
+B = 1000
+modelo_etrenado<- train(modelo_formula, data = modelo_dataframe, method = "lm",
+                    trControl = trainControl(method = "boot", number = B))
+modelo_final <- modelo_etrenado[["finalModel"]]
+
+cat("Modelo de modelo de RLM 1:\n")
+print(summary(modelo_final))
+
+print(vif(modelo_final))
 
 ```
 #### Haciendo un poco de investigación sobre el paquete caret, en particular cómo hacer Recursive Feature Elimination (RFE), construir un modelo de regresión lineal múltiple para predecir la variable IMC que incluya entre 10 y 20 predictores, seleccionando el conjunto de variables que maximice R2 y que use cinco repeticiones de validación cruzada de cinco pliegues para evitar el sobreajuste (obviamente no se debe considerar las variables Peso, Estatura ni estado nutricional –Weight, Height, EN respectivamente).
