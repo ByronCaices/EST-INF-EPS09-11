@@ -183,12 +183,26 @@ Ahora los predictores tienen VIF aceptables, además que podemos observar que el
 
 Además procedemos a verificar las demás condiciones a partir del gráfico de residuos
 
-```{r}
+```{r rp}
 modelo_lm = lm(modelo_formula, modelo_dataframe)
 residualPlots(modelo_lm)
 ncvTest(modelo_lm)
 ```
-Se puede observar que no exiten patrones reconocibles en ningún gráfico, además de cumplir las otras condiciones, hecho qie por lo que queda
+Podemos ver que la variable Waist.Girth y Knee.Girth obtiene un resultado significativo en la prueba de curvatura por lo que procedemos a graficar las relaciones de estas variables para comprobar la linealidad de estas variables respecto a la variable de respuesta
+
+```{r cr}
+crPlots(modelo_lm)
+```
+Se ven dentro de lo normal, considerando que en el gráfico de Knee.Girth la curvatura puede estar producida por los valores extremos influyentes.
+
+Homocedasticidad
+```{r homo}
+ncvTest(lm(Weight ~ Waist.Girth, modelo_dataframe))
+ncvTest(lm(Weight ~ Thigh.Girth, modelo_dataframe))
+ncvTest(lm(Weight ~ Forearm.Girth, modelo_dataframe))
+ncvTest(lm(Weight ~ Knee.Girth, modelo_dataframe))
+ncvTest(lm(Weight ~ Height, modelo_dataframe))
+```
 #### Haciendo un poco de investigación sobre el paquete caret, en particular cómo hacer Recursive Feature Elimination (RFE), construir un modelo de regresión lineal múltiple para predecir la variable IMC que incluya entre 10 y 20 predictores, seleccionando el conjunto de variables que maximice R2 y que use cinco repeticiones de validación cruzada de cinco pliegues para evitar el sobreajuste (obviamente no se debe considerar las variables Peso, Estatura ni estado nutricional –Weight, Height, EN respectivamente).
 ```{r modelo}
 
