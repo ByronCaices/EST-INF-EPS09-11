@@ -506,9 +506,7 @@ printCoefmat(rlm1_comp[cambio_coeficiente >= rlm1_coef_cambio_umb, ])
 Observamos que todos los casos listados producen cambios muy grandes por lo que los eliminamos.
 ```{r}
 modelo_dataframe = modelo_dataframe[-c(2,67, 71, 92,96),]
-modelo_lm = lm(modelo_formula, modelo_dataframe)
 
-modelo_formula <- formula(paste(variable_a_predecir, variables_texto, sep = " ~ "))
 
 modelo_etrenado <- train(modelo_formula, data = modelo_dataframe, method = "lm",
                     trControl = trainControl(method = "repeatedcv", number = 5, repeats = 5))
@@ -521,10 +519,10 @@ Se vuelve a comrpobar de la condición 4 en adelante
 4- Relaciones lineales
 5- Residuos centrados en cero
 
-Para comprobar estas dos condiciones podemos usar residualPlots y crPlots.
+Para comprobar estas dos condiciones podemos usar  crPlots.
 
 ```{r}
-residualPlots(modelo_lm, linear = TRUE, ask = FALSE)
+modelo_lm = lm(modelo_formula, modelo_dataframe)
 
 crPlots(modelo_lm, ask = FALSE)
 ```
@@ -640,8 +638,95 @@ modeloLogist <- modeloLogist_entrenado[["finalModel"]]
 
 cat("Nuevos factores de inflación de la varianza:\n")
 print(vif(modeloLogist))
-```
-#### Pronunciarse sobre la confiabilidad y el poder predictivo de los modelos obtenidos.
-```{r modelo}
 
+modeloNulo_formula <- formula(paste(variable_a_predecir, "1", sep = " ~ "))
+modeloNulo <- glm(modeloNulo_formula, data = modeloLogist_dataframe, family = binomial(link = "logit"))
+print(anova(modeloNulo, modelo_glm))
 ```
+Observamos que ahora el modelo tiene vifs aceptables, por lo que seguimos evaluando las condiciones
+
+1- Relacion lineal
+
+```{r}
+modelo_glm = glm(modeloLogist_formula, data = modeloLogist_dataframe, family = binomial(link = "logit"))
+residualPlots(modelo_glm, ask = FALSE)
+crPlots(modelo_glm, ask = FALSE)
+```
+Para todas las variables vemos buenos niveles de curvatura y apreciamos relaciones lineales en los gráficos de crPlots
+
+6- Casos influyentes
+
+```{r}
+casos_influyentes = influencePlot(modelo_glm)
+```
+Vemos que el caso 32 y 47 parecen estar alejados y tener una alta distnacia de Cook, mientras que el caso 86 y 22 tienen un alto Hat value por lo que vemos su influencia en el modelo
+```{r}
+influencia_ids <- as.integer(rownames(casosInfluyentes))
+rlm1_comp_f <- function(s) {
+  mat <- eval(bquote(compareCoefs(modelo_glm, update(modelo_glm, subset = -.(s)), print = FALSE)))
+  rownames(mat) <- paste(rownames(mat), "sin caso", s)
+  invisible(mat)
+}
+comparacion <- lapply(influencia_ids, rlm1_comp_f)
+modelo_comparacion <- do.call(rbind, comparacion)
+
+# Agregamos el cambio porcentual y encontramos el 25% superior
+cambio_coeficiente <- abs((modelo_comparacion[, 1]-modelo_comparacion[, 3])/modelo_comparacion[, 1]) * 100
+rlm1_comp <- cbind(modelo_comparacion, Cambio = cambio_coeficiente)
+rlm1_coef_cambio_umb <- quantile(cambio_coeficiente, 0.75)
+
+cat("Observaciones que generan cambios importantes de los coeficientes del modelo de RLM 1:\n")
+printCoefmat(rlm1_comp[cambio_coeficiente >= rlm1_coef_cambio_umb, ])
+```
+Observamos que tanto el caso 2 como el 96 producen cambios relativamente altos, por lo que los eliminamos
+
+```{r}
+modeloLogist_dataframe <- modeloLogist_dataframe[-c(2,96), ]
+
+modeloLogist_entrenado <- train(modeloLogist_formula, data = modeloLogist_dataframe, method = "glm", metric = "ROC",
+                       trControl = modeloLogist_control_entrenamiento)
+modeloLogist <- modeloLogist_entrenado[["finalModel"]]
+
+cat("Modelo de \n")
+print(summary(modeloLogist))
+```
+Volvemos a comprobar las condiciones
+
+1- Relacion lineal
+
+```{r}
+modelo_glm = glm(modeloLogist_formula, data = modeloLogist_dataframe, family = binomial(link = "logit"))
+residualPlots(modelo_glm, ask = FALSE)
+crPlots(modelo_glm, ask = FALSE)
+```
+La curvatura sigue bien
+
+2- Autocorrelación
+
+```{r modelo}
+print(durbinWatsonTest(modelo_glm))
+```
+Observamos que lo más probable es que haya autocorrelación por lo que el modelo no es confiable
+
+Desempeño
+vemos el area de la curva de ROC y la matriz de confusión para evaluar el desempeño
+
+```{r}
+cat("Rendimiento del modelo de RLogitM:\n")
+print(modeloLogist_entrenado[["results"]])
+```
+Se ve un alto nivel de area bajo la curva
+
+```{r}
+contMat <- confusionMatrix(modeloLogist_entrenado[["pred"]][["pred"]], modeloLogist_entrenado[["pred"]][["obs"]])
+
+cat("Matriz de confusión del modelo de RLogitM:\n")
+print(contMat)
+```
+Finalmente se observa gracias a la matriz de confución, que en todos los indicadores de calidad del modelo logistico se obtienen valores sobre 80% por lo que se podría decir que el modelo es bueno prediciendo personas con estado nutricional normal
+
+#### Pronunciarse sobre la confiabilidad y el poder predictivo de los modelos obtenidos.
+
+Respecto a la confiabilidad de los modelos múltiples se puede decir que en la segunda iteración faltó volver a ver casos influyentes y su influencia en el modelo, por lo cual no se pueden considerar del todo confiables y respecto a su poder predictivo se observó que ambos tenian buenos niveles de error y desvición de esto por lo que tienen un nivel predictivo aceptable
+
+Con respecto al modelo logístico, este tambien tuvo problemas con los casos influyentes y en especial con la autocorrelación, por lo que el modelo no es nada confiable, a pesar de esto el modelo tiene un buen valor de area bajo la curva de ROC y además tiene buen porcentaje de precisión, sensibilidad, especificidad, etc por lo que de arreglar los problemas de confiabilidad, probablemente el modelo tiene una buena calidad predictiva si estos últimos valores mencionados no varian mucho
