@@ -321,7 +321,140 @@ Observamos que el modelo posee una bondad de ajuste de 0.954 aproximadamente, lo
 
 #### Haciendo un poco de investigación sobre el paquete caret, en particular cómo hacer Recursive Feature Elimination (RFE), construir un modelo de regresión lineal múltiple para predecir la variable IMC que incluya entre 10 y 20 predictores, seleccionando el conjunto de variables que maximice R2 y que use cinco repeticiones de validación cruzada de cinco pliegues para evitar el sobreajuste (obviamente no se debe considerar las variables Peso, Estatura ni estado nutricional –Weight, Height, EN respectivamente).
 ```{r modelo}
+set.seed(20915)
+variable_a_predecir = "IMC"
+variables_prohibidas = c("EN", "Height", "Weight")
 
+modelo_dataframe <- datos |> select(-all_of(variables_prohibidas))
+modelo_formula <- formula(paste(variable_a_predecir, ".", sep = " ~ "))
+modelo_control <- rfeControl(functions = lmFuncs, method = "repeatedcv",
+                           number = 5, repeats = 5, verbose = FALSE)
+
+modelo_rfe <- rfe(modelo_formula, data = modelo_dataframe, rfeControl = modelo_control, sizes = 10:20, metric = "Rsquared")
+modelo <- modelo_rfe[["fit"]]
+
+#Graficar el proceso
+plot <- ggplot(modelo_rfe) + theme_pubr()
+print(plot)
+```
+Vemos que el modelo con mayor r cuadrado se obtiene con más de 20 predictores, por lo que nos quedamos con el modelo de 18, ya que es el con mayor r cuadrado dentro de las restricciones.
+
+```{r}
+cat("\nModelo obtenido con RFE:")
+print(summary(modelo))
+```
+
+Evaluamos Multicolinealidad para ver que variables es mejor mantener en el modelo
+```{r multi}
+print(vif(modelo))
+```
+Observamos que muchas variables tienen vif mayor a 10, donde Forearm.Girth es la variable con mayor vif por lo que la quitamos del modelo
+```{r}
+variables <- predictors(modelo)[-8]
+variables_texto <- paste(variables, collapse = " + ")
+modelo_formula <- formula(paste(variable_a_predecir, variables_texto, sep = " ~ "))
+
+modelo_etrenado <- train(modelo_formula, data = modelo_dataframe, method = "lm",
+                    trControl = trainControl(method = "repeatedcv", number = 5, repeats = 5))
+modelo<- modelo_etrenado[["finalModel"]]
+
+cat("Nuevos factores de inflación de la varianza:\n")
+print(vif(modelo))
+```
+La variable Chest.Girth tiene vif inaceptable y el más alto por lo que la eliminamos también
+```{r}
+variables <- predictors(modelo)[-12]
+variables_texto <- paste(variables, collapse = " + ")
+modelo_formula <- formula(paste(variable_a_predecir, variables_texto, sep = " ~ "))
+
+modelo_etrenado <- train(modelo_formula, data = modelo_dataframe, method = "lm",
+                    trControl = trainControl(method = "repeatedcv", number = 5, repeats = 5))
+modelo<- modelo_etrenado[["finalModel"]]
+
+cat("Nuevos factores de inflación de la varianza:\n")
+print(vif(modelo))
+```
+La variable Wrist.Minimum.Girth  tiene vif inaceptable y el más alto por lo que la eliminamos también
+```{r}
+variables <- predictors(modelo)[-2]
+variables_texto <- paste(variables, collapse = " + ")
+modelo_formula <- formula(paste(variable_a_predecir, variables_texto, sep = " ~ "))
+
+modelo_etrenado <- train(modelo_formula, data = modelo_dataframe, method = "lm",
+                    trControl = trainControl(method = "repeatedcv", number = 5, repeats = 5))
+modelo<- modelo_etrenado[["finalModel"]]
+
+cat("Nuevos factores de inflación de la varianza:\n")
+print(vif(modelo))
+```
+
+La variable  Hip.Girth   tiene vif preocupante y el más alto por lo que la eliminamos también
+```{r}
+variables <- predictors(modelo)[-14]
+variables_texto <- paste(variables, collapse = " + ")
+modelo_formula <- formula(paste(variable_a_predecir, variables_texto, sep = " ~ "))
+
+modelo_etrenado <- train(modelo_formula, data = modelo_dataframe, method = "lm",
+                    trControl = trainControl(method = "repeatedcv", number = 5, repeats = 5))
+modelo<- modelo_etrenado[["finalModel"]]
+
+cat("Nuevos factores de inflación de la varianza:\n")
+print(vif(modelo))
+```
+La variable   Elbows.diameter   tiene vif preocupante y el más alto por lo que la eliminamos también
+```{r}
+variables <- predictors(modelo)[-7]
+variables_texto <- paste(variables, collapse = " + ")
+modelo_formula <- formula(paste(variable_a_predecir, variables_texto, sep = " ~ "))
+
+modelo_etrenado <- train(modelo_formula, data = modelo_dataframe, method = "lm",
+                    trControl = trainControl(method = "repeatedcv", number = 5, repeats = 5))
+modelo<- modelo_etrenado[["finalModel"]]
+
+cat("Nuevos factores de inflación de la varianza:\n")
+print(vif(modelo))
+```
+La variable   Waist.Girthr   tiene vif preocupante y el más alto por lo que la eliminamos también
+```{r}
+variables <- predictors(modelo)[-8]
+variables_texto <- paste(variables, collapse = " + ")
+modelo_formula <- formula(paste(variable_a_predecir, variables_texto, sep = " ~ "))
+
+modelo_etrenado <- train(modelo_formula, data = modelo_dataframe, method = "lm",
+                    trControl = trainControl(method = "repeatedcv", number = 5, repeats = 5))
+modelo<- modelo_etrenado[["finalModel"]]
+
+cat("Nuevos factores de inflación de la varianza:\n")
+print(vif(modelo))
+```
+Finalmente obtenemos niveles vif relativamente aceptables por lo que dejamos el modelo así, con 12 variables.
+```{r}
+print(summary(modelo))
+```
+Vemos que el modelo reduce un 75,9% la desviación con resoecto al modelo nulo y esta reducción es significativa, debido al valor p obtenido.
+
+Comprobación de condiciones
+
+1- La varible de respuesta debe ser cuantitativa y continua
+
+Como la variables de respuesta es IMC, se cumple esta condición
+
+2- Los predictores deben ser cuantitativos o diotomicos
+
+Como las variables elegidas fueron son medidas, también se cumple esta condición
+
+3- Los predictores deben tener algún grado de variabilidad
+
+Como se puede observar, ningun predictor tiene desviación estandar 0
+
+4- Relaciones lineales
+5- Residuos centrados en cero
+
+Para comprobar estas dos condiciones podemos usar residualPlots.
+
+```{r}
+modelo_lm = lm(modelo_formula,modelo_dataframe)
+residualPlots(modelo_lm)
 ```
 #### Usando RFE, construir un modelo de regresión logística múltiple para la variable EN que incluya el conjunto de predictores, entre dos y seis, que entregue la mejor curva ROC y que utilice validación cruzada dejando uno fuera para evitar el sobreajuste (obviamente no se debe considerar las variables Peso, Estatura –Weight y Height respectivamente– ni IMC).
 ```{r modelo}
