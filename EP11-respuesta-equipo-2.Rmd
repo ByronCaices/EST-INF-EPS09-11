@@ -586,7 +586,60 @@ Observamos que el modelo posee una bondad de ajuste de 0.954 aproximadamente, lo
 
 #### Usando RFE, construir un modelo de regresión logística múltiple para la variable EN que incluya el conjunto de predictores, entre dos y seis, que entregue la mejor curva ROC y que utilice validación cruzada dejando uno fuera para evitar el sobreajuste (obviamente no se debe considerar las variables Peso, Estatura –Weight y Height respectivamente– ni IMC).
 ```{r modelo}
+datos = datos |> mutate(EN = ifelse(IMC < 23.2, "normal", "sobrepeso"))
+datos[["EN"]] <- factor(datos[["EN"]])
 
+variable_a_predecir = "EN"
+variables_prohibidas = c("Weight", "Height", "IMC")
+modeloLogist_dataframe <- datos |> select(-all_of(variables_prohibidas))
+modeloLogist_formula <- formula(paste(variable_a_predecir, ".", sep = " ~ "))
+
+lrFuncs[["summary"]] <- twoClassSummary
+modeloLogist_control <- rfeControl(functions = lrFuncs, method = "LOOCV", saveDetails = TRUE, returnResamp = "all", verbose = FALSE)
+modeloLogist_control_entrenamiento <- trainControl(method = "none", classProbs = TRUE,
+                                      summaryFunction = twoClassSummary)
+
+set.seed(20915)
+modeloLogist_rfe <- suppressWarnings(
+  rfe(modeloLogist_formula, data = modeloLogist_dataframe, sizes = 2:6, metric = "ROC",
+      rfeControl = modeloLogist_control, trControl = modeloLogist_control_entrenamiento)
+)
+modeloLogist <- modeloLogist_rfe[["fit"]]
+
+cat("Modelo de RLogitM obtenido con RFE:\n")
+print(summary(modeloLogist))
+```
+Podemos ver el proceso de búsqueda realizado por RFE.
+
+```{r}
+plot <- ggplot(modeloLogist_rfe) + theme_pubr()
+print(plot)
+```
+Vemos que el modelo con mejor curva de ROC contiene 6 predictores, por lo que nos quedamos con ese
+
+Procedemos a evaluar si el modelo comple con las condiciones para considerarse confiable
+
+Primero comprobamos multicolinealidad, para ver si el modelo está bien con 6 predictores o hay que eliminar alguno
+
+```{r}
+cat("Factores de inflación de la varianza:\n")
+print(vif(modeloLogist))
+```
+La variable Forearm.Girth posee un vif preocupante por lo que la eliminamos
+
+```{r modelo}
+variables <- predictors(modeloLogist)[-1]
+variables_texto <- paste(variables, collapse = " + ")
+modeloLogist_formula <- formula(paste(variable_a_predecir, variables_texto, sep = " ~ "))
+modeloLogist_control_entrenamiento <- trainControl(method = "LOOCV", classProbs = TRUE,
+                                      summaryFunction = twoClassSummary)
+
+modeloLogist_entrenado <- train(modeloLogist_formula, data = modeloLogist_dataframe, method = "glm", metric = "ROC",
+                       trControl = modeloLogist_control_entrenamiento)
+modeloLogist <- modeloLogist_entrenado[["finalModel"]]
+
+cat("Nuevos factores de inflación de la varianza:\n")
+print(vif(modeloLogist))
 ```
 #### Pronunciarse sobre la confiabilidad y el poder predictivo de los modelos obtenidos.
 ```{r modelo}
