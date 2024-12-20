@@ -47,6 +47,7 @@ if (!requireNamespace('leaps', quietly = TRUE)){
   install.packages('leaps')
 }
 library(leaps)
+library(psych)
 ```
 
 #### CONTEXTO
@@ -229,21 +230,21 @@ rlm1_comp_f <- function(s) {
   rownames(mat) <- paste(rownames(mat), "sin caso", s)
   invisible(mat)
 }
-comparacion <- lapply(rlm1_inf_ids, rlm1_comp_f)
+comparacion <- lapply(influencia_ids, rlm1_comp_f)
 modelo_comparacion <- do.call(rbind, comparacion)
 
 # Agregamos el cambio porcentual y encontramos el 25% superior
 cambio_coeficiente <- abs((modelo_comparacion[, 1]-modelo_comparacion[, 3])/modelo_comparacion[, 1]) * 100
 rlm1_comp <- cbind(modelo_comparacion, Cambio = cambio_coeficiente)
-rlm1_coef_cambio_umb <- quantile(rlm1_coef_cambio, 0.75)
+rlm1_coef_cambio_umb <- quantile(cambio_coeficiente, 0.75)
 
 cat("Observaciones que generan cambios importantes de los coeficientes del modelo de RLM 1:\n")
-printCoefmat(rlm1_comp[rlm1_coef_cambio >= rlm1_coef_cambio_umb, ])
+printCoefmat(rlm1_comp[cambio_coeficiente >= rlm1_coef_cambio_umb, ])
 ```
-Como podemos observar, el caso 25 es el más influyente debido a que provoca los mayores nniveles de cambio, depués es seguido por el caso 86 y luego por el 11, por lo que los eliminamos de los datos
+Como podemos observar, el caso 71 es el más influyente debido a que provoca los mayores niveles de cambio, depués es seguido por el caso 96 y luego por el 92 y 100, por lo que los eliminamos de los datos
 
 ```{r}
-modelo_dataframe = modelo_dataframe[-c(25, 86, 11),]
+modelo_dataframe = modelo_dataframe[-c(71,96, 92, 100),]
 modelo_lm = lm(modelo_formula, modelo_dataframe)
 
 modelo_etrenado<- train(modelo_formula, data = modelo_dataframe, method = "lm",
@@ -262,7 +263,7 @@ Para comprobar esta condición podemos usar una prueba de curvatura o bien crPlo
 residualPlots(modelo_lm)
 crPlots(modelo_lm)
 ```
-Con los valores de la prueba de curvatura entregados por la función residualPlots() observamos que la variable Knee.Girth tiene problemas con la curvatura, pero al ver el gráfico de esta variable de lña función crPlots(), observamos que esta curvatura puede estar dada por otros valores atipicos que no fueron eliminados, yaque quitando estos valores se puede observar que si se observa una relación aproximadamente lineal.
+Con los valores de la prueba de curvatura entregados por la función residualPlots() observamos que la variable Waist.Girth tiene problemas con la curvatura, pero al ver el gráfico de esta variable de la función crPlots(), observamos que esta curvatura puede estar dada por otros valores atipicos que no fueron eliminados, ya que quitando estos valores se puede observar que si se observa una relación aproximadamente lineal.
 
 Homocedasticidad
 
@@ -317,7 +318,7 @@ cat("Rendimiento del modelo de RLM 1:\n")
 print(modelo_etrenado[["results"]])
 print(describe(error_dataframe, trim = 0, skew = FALSE, IQR = TRUE), digits = 3)
 ```
-Observamos que el modelo posee una bondad de ajuste de 0.954 aproximadamente, lo que es bastante bueno, además vemos que posee un error promedio de 2.9 ± 0.355 y vemos que la distrubución de error es aproximadamente simetrica también.
+Observamos que el modelo posee una bondad de ajuste de 0.954 aproximadamente, lo que es bastante bueno, además vemos que posee un error promedio de 2.5 ± 0.253 y vemos que la distrubución de error es aproximadamente simetrica también.
 
 #### Haciendo un poco de investigación sobre el paquete caret, en particular cómo hacer Recursive Feature Elimination (RFE), construir un modelo de regresión lineal múltiple para predecir la variable IMC que incluya entre 10 y 20 predictores, seleccionando el conjunto de variables que maximice R2 y que use cinco repeticiones de validación cruzada de cinco pliegues para evitar el sobreajuste (obviamente no se debe considerar las variables Peso, Estatura ni estado nutricional –Weight, Height, EN respectivamente).
 ```{r modelo}
@@ -450,11 +451,70 @@ Como se puede observar, ningun predictor tiene desviación estandar 0
 4- Relaciones lineales
 5- Residuos centrados en cero
 
-Para comprobar estas dos condiciones podemos usar residualPlots.
+Para comprobar estas dos condiciones podemos usar residualPlots y crPlots.
 
 ```{r}
 modelo_lm = lm(modelo_formula,modelo_dataframe)
-residualPlots(modelo_lm)
+residualPlots(modelo_lm, linear = TRUE, ask = FALSE)
+
+crPlots(modelo_lm, ask = FALSE)
+```
+Podemos observar que todas las variables tienen ua relación aproximadamente lineal y pasan la prueba de curvatura a excepción de Gender, pero que la ser dicotomica es más común este hecho
+
+6- Homocedasticidad
+
+Usamos marginaModelPlots
+```{r}
+marginalModelPlots(modelo_lm, sd = TRUE, fitted = FALSE, ask = FALSE)
+```
+Los gráficos muestran un ajuste relativamente bueno, por lo qe parece haber homocedasticidad
+
+7- Autocorrelación
+
+Usamos durbinWatsonTest.
+
+```{r}
+print(durbinWatsonTest(modelo_lm))
+```
+No parece haber evidencia para afirmar autocorrelación
+
+8- Casos influyentes
+
+```{r}
+casosInfluyentes = influencePlot(modelo_lm, id = list(n = 3))
+```
+Vemos que nuevamente el caso 92 y 96 están alejados y presentan alta distancia de Cook, además de que el caso 71 posee alto Hat.value, procedemos a ver el cambio de coeficientes eliminando estos casos
+
+```{r}
+influencia_ids <- as.integer(rownames(casosInfluyentes))
+rlm1_comp_f <- function(s) {
+  mat <- eval(bquote(compareCoefs(modelo_lm, update(modelo_lm, subset = -.(s)), print = FALSE)))
+  rownames(mat) <- paste(rownames(mat), "sin caso", s)
+  invisible(mat)
+}
+comparacion <- lapply(influencia_ids, rlm1_comp_f)
+modelo_comparacion <- do.call(rbind, comparacion)
+
+# Agregamos el cambio porcentual y encontramos el 25% superior
+cambio_coeficiente <- abs((modelo_comparacion[, 1]-modelo_comparacion[, 3])/modelo_comparacion[, 1]) * 100
+rlm1_comp <- cbind(modelo_comparacion, Cambio = cambio_coeficiente)
+rlm1_coef_cambio_umb <- quantile(cambio_coeficiente, 0.75)
+
+cat("Observaciones que generan cambios importantes de los coeficientes del modelo de RLM 1:\n")
+printCoefmat(rlm1_comp[cambio_coeficiente >= rlm1_coef_cambio_umb, ])
+```
+Observamos que todos los casos listados producen cambios muy grandes por lo que los eliminamos.
+```{r}
+modelo_dataframe = modelo_dataframe[-c(2,67, 71, 92,96),]
+modelo_lm = lm(modelo_formula, modelo_dataframe)
+
+modelo_formula <- formula(paste(variable_a_predecir, variables_texto, sep = " ~ "))
+
+modelo_etrenado <- train(modelo_formula, data = modelo_dataframe, method = "lm",
+                    trControl = trainControl(method = "repeatedcv", number = 5, repeats = 5))
+modelo<- modelo_etrenado[["finalModel"]]
+
+print(summary(modelo))
 ```
 #### Usando RFE, construir un modelo de regresión logística múltiple para la variable EN que incluya el conjunto de predictores, entre dos y seis, que entregue la mejor curva ROC y que utilice validación cruzada dejando uno fuera para evitar el sobreajuste (obviamente no se debe considerar las variables Peso, Estatura –Weight y Height respectivamente– ni IMC).
 ```{r modelo}
