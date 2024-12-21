@@ -113,17 +113,17 @@ print(summary(modelo_final))
 
 Verificar condiciones para la confiabilidad del modelo
 
-1- La varible de respuesta debe ser cuantitativa y continua
+1- La variable de respuesta debe ser cuantitativa y continua
 
 Como la variables de respuesta es peso, se cumple esta condición
 
-2- Los predictores deben ser cuantitativos o diotomicos
+2- Los predictores deben ser cuantitativos o dicotómicos
 
 Como las variables elegidas fueron Shoulder.Girth, Waist.Girth, Chest.Girth, Hip.Girth, Thigh.Girth, Forearm.Girth, Knee.Girth y Height son medidas, también se cumple esta condición
 
 3- Los predictores deben tener algún grado de variabilidad
 
-Como se puede observar, ningun predictor tiene desviación estandar 0
+Como se puede observar, ningún predictor tiene desviación estándar 0
 
 Multicolinealidad
 Verificamos la multicolinealidad antes de seguir evaluando el modelo
@@ -199,15 +199,15 @@ Se ven dentro de lo normal, considerando que en el gráfico de Knee.Girth la cur
 
 Homocedasticidad
 ```{r homo}
-cat("\nHomocedastididad Waist.Girth\n")
+cat("\nhomocedasticidad Waist.Girth\n")
 ncvTest(lm(Weight ~ Waist.Girth, modelo_dataframe))
-cat("\nHomocedastididad Thigh.Girth\n")
+cat("\nhomocedasticidad Thigh.Girth\n")
 ncvTest(lm(Weight ~ Thigh.Girth, modelo_dataframe))
-cat("\nHomocedastididad Forearm.Girth\n")
+cat("\nhomocedasticidad Forearm.Girth\n")
 ncvTest(lm(Weight ~ Forearm.Girth, modelo_dataframe))
-cat("\nHomocedastididad Knee.Girth\n")
+cat("\nhomocedasticidad Knee.Girth\n")
 ncvTest(lm(Weight ~ Knee.Girth, modelo_dataframe))
-cat("\nHomocedastididad Height\n")
+cat("\nhomocedasticidad Height\n")
 ncvTest(lm(Weight ~ Height, modelo_dataframe))
 ```
 ```{r graficos homo}
@@ -215,8 +215,8 @@ marginalModelPlots(modelo_lm, sd = TRUE,
                    id = list(method = "r", n = 3, cex = 0.7, location = "lr"),
                    col = "steelblue", pch = 20, col.line = c("steelblue","red"))
 ```
-A partir de los gráficos y del ncvTest podemosobservar que e la mayoría de las variables se obtiene un nivel adecuado de homocedasticidad, a excepcion de la variable Forearm.Girth, pero posiblemente este resultado se ve afectado por lo valores atipicos que se pueden ver en el gráfico de la variable mencionada anteriormente
-```{r atipicos}
+A partir de los gráficos y del ncvTest podemosobservar que e la mayoría de las variables se obtiene un nivel adecuado de homocedasticidad, a excepcion de la variable Forearm.Girth, pero posiblemente este resultado se ve afectado por lo valores atípicos que se pueden ver en el gráfico de la variable mencionada anteriormente
+```{r atípicos}
 modelo_influencia = influencePlot(modelo_lm, id = list(n = 3))
 print(modelo_influencia)
 
@@ -263,21 +263,21 @@ Para comprobar esta condición podemos usar una prueba de curvatura o bien crPlo
 residualPlots(modelo_lm)
 crPlots(modelo_lm)
 ```
-Con los valores de la prueba de curvatura entregados por la función residualPlots() observamos que la variable Waist.Girth tiene problemas con la curvatura, pero al ver el gráfico de esta variable de la función crPlots(), observamos que esta curvatura puede estar dada por otros valores atipicos que no fueron eliminados, ya que quitando estos valores se puede observar que si se observa una relación aproximadamente lineal.
+Con los valores de la prueba de curvatura entregados por la función residualPlots() observamos que la variable Waist.Girth tiene problemas con la curvatura, pero al ver el gráfico de esta variable de la función crPlots(), observamos que esta curvatura puede estar dada por otros valores atípicos que no fueron eliminados, ya que quitando estos valores se puede observar que si se observa una relación aproximadamente lineal.
 
 Homocedasticidad
 
 Para comprobar esta condición podemos usar marginalModelPlots
 ```{r homo 2}
-cat("\nHomocedastididad Waist.Girth\n")
+cat("\nhomocedasticidad Waist.Girth\n")
 ncvTest(lm(Weight ~ Waist.Girth, modelo_dataframe))
-cat("\nHomocedastididad Thigh.Girth\n")
+cat("\nhomocedasticidad Thigh.Girth\n")
 ncvTest(lm(Weight ~ Thigh.Girth, modelo_dataframe))
-cat("\nHomocedastididad Forearm.Girth\n")
+cat("\nhomocedasticidad Forearm.Girth\n")
 ncvTest(lm(Weight ~ Forearm.Girth, modelo_dataframe))
-cat("\nHomocedastididad Knee.Girth\n")
+cat("\nhomocedasticidad Knee.Girth\n")
 ncvTest(lm(Weight ~ Knee.Girth, modelo_dataframe))
-cat("\nHomocedastididad Height\n")
+cat("\nhomocedasticidad Height\n")
 ncvTest(lm(Weight ~ Height, modelo_dataframe))
 marginalModelPlots(modelo_lm, sd = TRUE, 
                    id = list(method = "r", n = 3, cex = 0.7, location = "lr"),
@@ -318,7 +318,7 @@ cat("Rendimiento del modelo de RLM 1:\n")
 print(modelo_etrenado[["results"]])
 print(describe(error_dataframe, trim = 0, skew = FALSE, IQR = TRUE), digits = 3)
 ```
-Observamos que el modelo posee una bondad de ajuste de 0.954 aproximadamente, lo que es bastante bueno, además vemos que posee un error promedio de 2.5 ± 0.253 y vemos que la distrubución de error es aproximadamente simetrica también.
+Observamos que el modelo posee una bondad de ajuste de 0.954 aproximadamente, lo que es bastante bueno, además vemos que posee un error promedio de 2.5 ± 0.253 y vemos que la distribución de error es aproximadamente simétrica también.
 
 #### Haciendo un poco de investigación sobre el paquete caret, en particular cómo hacer Recursive Feature Elimination (RFE), construir un modelo de regresión lineal múltiple para predecir la variable IMC que incluya entre 10 y 20 predictores, seleccionando el conjunto de variables que maximice R2 y que use cinco repeticiones de validación cruzada de cinco pliegues para evitar el sobreajuste (obviamente no se debe considerar las variables Peso, Estatura ni estado nutricional –Weight, Height, EN respectivamente).
 ```{r modelo}
@@ -436,17 +436,17 @@ Vemos que el modelo reduce un 75,9% la desviación con resoecto al modelo nulo y
 
 Comprobación de condiciones
 
-1- La varible de respuesta debe ser cuantitativa y continua
+1- La variable de respuesta debe ser cuantitativa y continua
 
 Como la variables de respuesta es IMC, se cumple esta condición
 
-2- Los predictores deben ser cuantitativos o diotomicos
+2- Los predictores deben ser cuantitativos o dicotómicos
 
 Como las variables elegidas fueron son medidas, también se cumple esta condición
 
 3- Los predictores deben tener algún grado de variabilidad
 
-Como se puede observar, ningun predictor tiene desviación estandar 0
+Como se puede observar, ningúnpredictor tiene desviación estándar 0
 
 4- Relaciones lineales
 5- Residuos centrados en cero
@@ -526,7 +526,7 @@ modelo_lm = lm(modelo_formula, modelo_dataframe)
 
 crPlots(modelo_lm, ask = FALSE)
 ```
-Podemos observar que todas las variables tienen ua relación aproximadamente lineal y pasan la prueba de curvatura a excepción de Chest.diameter, pero puede deberse a unos valores atipicos no eliminados
+Podemos observar que todas las variables tienen ua relación aproximadamente lineal y pasan la prueba de curvatura a excepción de Chest.diameter, pero puede deberse a unos valores atípicos no eliminados
 
 6- Homocedasticidad
 
@@ -580,7 +580,7 @@ print(modelo_etrenado[["results"]])
 print(describe(error_dataframe, trim = 0, skew = FALSE, IQR = TRUE), digits = 3)
 ```
 
-Observamos que el modelo posee una bondad de ajuste de 0.954 aproximadamente, lo que es bastante bueno, además vemos que posee un error promedio de 1.54 ± 0.194 y vemos que la distrubución de error es aproximadamente simetrica también.
+Observamos que el modelo posee una bondad de ajuste de 0.954 aproximadamente, lo que es bastante bueno, además vemos que posee un error promedio de 1.54 ± 0.194 y vemos que la distribución de error es aproximadamente simétrica también.
 
 #### Usando RFE, construir un modelo de regresión logística múltiple para la variable EN que incluya el conjunto de predictores, entre dos y seis, que entregue la mejor curva ROC y que utilice validación cruzada dejando uno fuera para evitar el sobreajuste (obviamente no se debe considerar las variables Peso, Estatura –Weight y Height respectivamente– ni IMC).
 ```{r modelo}
@@ -659,7 +659,7 @@ Para todas las variables vemos buenos niveles de curvatura y apreciamos relacion
 ```{r}
 casos_influyentes = influencePlot(modelo_glm)
 ```
-Vemos que el caso 32 y 47 parecen estar alejados y tener una alta distnacia de Cook, mientras que el caso 86 y 22 tienen un alto Hat value por lo que vemos su influencia en el modelo
+Vemos que el caso 32 y 47 parecen estar alejados y tener una alta distancia de Cook, mientras que el caso 86 y 22 tienen un alto Hat value por lo que vemos su influencia en el modelo
 ```{r}
 influencia_ids <- as.integer(rownames(casosInfluyentes))
 rlm1_comp_f <- function(s) {
@@ -709,13 +709,13 @@ print(durbinWatsonTest(modelo_glm))
 Observamos que lo más probable es que haya autocorrelación por lo que el modelo no es confiable
 
 Desempeño
-vemos el area de la curva de ROC y la matriz de confusión para evaluar el desempeño
+vemos el área de la curva de ROC y la matriz de confusión para evaluar el desempeño
 
 ```{r}
 cat("Rendimiento del modelo de RLogitM:\n")
 print(modeloLogist_entrenado[["results"]])
 ```
-Se ve un alto nivel de area bajo la curva
+Se ve un alto nivel de área bajo la curva
 
 ```{r}
 contMat <- confusionMatrix(modeloLogist_entrenado[["pred"]][["pred"]], modeloLogist_entrenado[["pred"]][["obs"]])
@@ -729,4 +729,4 @@ Finalmente se observa gracias a la matriz de confución, que en todos los indica
 
 Respecto a la confiabilidad de los modelos múltiples se puede decir que en la segunda iteración faltó volver a ver casos influyentes y su influencia en el modelo, por lo cual no se pueden considerar del todo confiables y respecto a su poder predictivo se observó que ambos tenian buenos niveles de error y desvición de esto por lo que tienen un nivel predictivo aceptable
 
-Con respecto al modelo logístico, este tambien tuvo problemas con los casos influyentes y en especial con la autocorrelación, por lo que el modelo no es nada confiable, a pesar de esto el modelo tiene un buen valor de area bajo la curva de ROC y además tiene buen porcentaje de precisión, sensibilidad, especificidad, etc por lo que de arreglar los problemas de confiabilidad, probablemente el modelo tiene una buena calidad predictiva si estos últimos valores mencionados no varian mucho
+Con respecto al modelo logístico, este tambien tuvo problemas con los casos influyentes y en especial con la autocorrelación, por lo que el modelo no es nada confiable, a pesar de esto el modelo tiene un buen valor de área bajo la curva de ROC y además tiene buen porcentaje de precisión, sensibilidad, especificidad, etc por lo que de arreglar los problemas de confiabilidad, probablemente el modelo tiene una buena calidad predictiva si estos últimos valores mencionados no varian mucho
